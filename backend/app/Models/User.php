@@ -1,7 +1,5 @@
 <?php
-
 namespace App\Models;
-
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -21,7 +19,19 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'role',
+        'phone',
+        'address',
+        'active',
     ];
+    public function orders()
+    {
+        return $this->hasMany(\App\Models\Order::class);
+    }
+    public function activityLogs()
+    {
+        return $this->hasMany(\App\Models\UserActivityLog::class);
+    }
 
     /**
      * The attributes that should be hidden for serialization.

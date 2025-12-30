@@ -5,5 +5,5 @@
             <option value="{{ $tag->id }}" {{ (isset($product) && $product->tags->contains($tag->id)) ? 'selected' : '' }}>{{ $tag->name }}</option>
         @endforeach
     </select>
-    <small class="form-text text-muted">Hold Ctrl (Windows) or Command (Mac) to select multiple tags.</small>
+    <small class="form-text text-muted">You can search and select multiple tags.</small>
 </div>

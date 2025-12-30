@@ -8,7 +8,7 @@
             <div class="card shadow mb-4">
                 <div class="card-header bg-primary text-white">Brand Information</div>
                 <div class="card-body">
-                    <form action="{{ route('brands.store') }}" method="POST">
+                    <form action="{{ route('brands.store') }}" method="POST" enctype="multipart/form-data">
                         @csrf
                         <div class="form-row">
                             <div class="form-group col-md-6">
@@ -20,9 +20,15 @@
                                 <input type="text" name="slug" class="form-control">
                             </div>
                         </div>
+                        <div class="form-row">
+                            <div class="form-group col-md-6">
+                                <label>Brand Image</label>
+                                <input type="file" name="image" class="form-control">
+                            </div>
+                        </div>
                         <div class="text-right mt-3">
-                            <button type="submit" class="btn btn-primary">Save</button>
-                            <a href="{{ route('brands.index') }}" class="btn btn-secondary">Cancel</a>
+                            <button type="submit" class="btn btn-primary" onclick="toastr.success('Brand will be saved!')">Save</button>
+                            <a href="{{ route('brands.index') }}" class="btn btn-secondary" onclick="toastr.info('Cancelled brand creation')">Cancel</a>
                         </div>
                     </form>
                 </div>

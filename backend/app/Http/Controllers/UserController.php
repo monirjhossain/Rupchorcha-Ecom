@@ -10,8 +10,51 @@ class UserController extends Controller
     // User list (admin)
     public function index()
     {
-        $users = User::all();
+        $query = User::query();
+        if ($search = request('search')) {
+            $query->where(function($q) use ($search) {
+                $q->where('name', 'like', "%$search%")
+                  ->orWhere('email', 'like', "%$search%")
+                  ->orWhere('phone', 'like', "%$search%");
+            });
+        }
+        if ($role = request('role')) {
+            $query->where('role', $role);
+        }
+        $users = $query->get();
         return view('admin.users.index', compact('users'));
+    }
+    // Toggle user active status
+    public function toggleActive($id)
+    {
+        $user = User::findOrFail($id);
+        $user->active = !$user->active;
+        $user->save();
+        return back()->with('success', 'User status updated.');
+    }
+
+    // ...existing code...
+
+    // Send email or SMS to customer
+    public function sendMessage(Request $request, $id)
+    {
+        $user = User::findOrFail($id);
+        $request->validate([
+            'message_type' => 'required|in:email,sms',
+            'message' => 'required|string',
+        ]);
+        if ($request->message_type === 'email') {
+            \Mail::raw($request->message, function($mail) use ($user) {
+                $mail->to($user->email)
+                    ->subject('Message from Admin');
+            });
+            return back()->with('success', 'Email sent successfully!');
+        } elseif ($request->message_type === 'sms') {
+            // Implement SMS sending logic here (integration required)
+            // Example: SmsService::send($user->phone, $request->message);
+            return back()->with('success', 'SMS sent (simulation).');
+        }
+        return back()->with('error', 'Invalid message type.');
     }
 
     // Show create user form (admin)
@@ -51,6 +94,12 @@ class UserController extends Controller
 
         Auth::login($user);
         return redirect('/admin');
+    }
+     // Show customer details
+    public function show($id)
+    {
+        $user = User::with('orders')->findOrFail($id);
+        return view('admin.users.show', compact('user'));
     }
 
     // Store new user (admin)

@@ -48,10 +48,8 @@
                         <th>Stock</th>
                         <th>SKU</th>
                         <th>Status</th>
-                        <th>Featured</th>
                         <th>Category</th>
                         <th>Brand</th>
-                        <th>Tags</th>
                         <th>Action</th>
                     </tr>
                 </thead>
@@ -72,20 +70,18 @@
                             <td>{{ $product->stock_quantity }}</td>
                             <td>{{ $product->sku }}</td>
                             <td>{{ ucfirst($product->status) }}</td>
-                            <td>{{ $product->featured ? 'Yes' : 'No' }}</td>
                             <td>{{ $product->category->name ?? '-' }}</td>
                             <td>{{ $product->brand->name ?? '-' }}</td>
                             <td>
-                                @foreach($product->tags as $tag)
-                                    <span class="badge badge-info">{{ $tag->name }}</span>
-                                @endforeach
-                            </td>
-                            <td>
-                                <a href="{{ route('products.edit', $product->id) }}" class="btn btn-sm btn-info">Edit</a>
+                                <a href="{{ route('products.edit', $product->id) }}" class="btn btn-sm btn-info" title="Edit">
+                                    <i class="fas fa-edit"></i>
+                                </a>
                                 <form action="{{ route('products.destroy', $product->id) }}" method="POST" style="display:inline-block;" onsubmit="return confirm('Are you sure?');">
                                     @csrf
                                     @method('DELETE')
-                                    <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+                                    <button type="submit" class="btn btn-sm btn-danger" title="Delete">
+                                        <i class="fas fa-trash-alt"></i>
+                                    </button>
                                 </form>
                             </td>
                         </tr>

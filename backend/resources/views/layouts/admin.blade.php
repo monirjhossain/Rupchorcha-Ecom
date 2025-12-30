@@ -14,17 +14,60 @@
     <link href="{{ asset('adminpanel/css/sb-admin-2.min.css') }}" rel="stylesheet">
     <!-- Toastr CSS -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css" rel="stylesheet">
+<style>
+    html, body, #wrapper {
+        height: 100%;
+        min-height: 100vh;
+    }
+    #wrapper {
+        display: flex !important;
+        min-height: 100vh;
+    }
+    #content-wrapper {
+        flex: 1 1 0%;
+        display: flex;
+        flex-direction: column;
+        min-height: 100vh;
+    }
+    #content {
+        flex: 1 1 0%;
+    }
+    .sidebar-sticky {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 250px;
+        height: 100vh;
+        min-height: 100vh;
+        z-index: 1030;
+        overflow-y: auto;
+    }
+    #wrapper {
+        padding-left: 250px;
+    }
+    @media (max-width: 991.98px) {
+        .sidebar-sticky {
+            position: static;
+            width: 100%;
+            height: auto;
+            min-height: 0;
+        }
+        #wrapper {
+            padding-left: 0;
+        }
+    }
+</style>
 </head>
 <body id="page-top">
     <!-- Page Wrapper -->
-    <div id="wrapper">
+    <div id="wrapper" class="d-flex min-vh-100">
         <!-- Sidebar -->
         @include('layouts.partials.sidebar')
         <!-- End of Sidebar -->
         <!-- Content Wrapper -->
-        <div id="content-wrapper" class="d-flex flex-column">
+        <div id="content-wrapper" class="d-flex flex-column flex-grow-1 min-vh-100">
             <!-- Main Content -->
-            <div id="content">
+            <div id="content" class="flex-grow-1">
                 <!-- Topbar -->
                 @include('layouts.partials.topbar')
                 <!-- End of Topbar -->

@@ -22,8 +22,8 @@
                             </div>
                         </div>
                         <div class="text-right mt-3">
-                            <button type="submit" class="btn btn-primary">Update</button>
-                            <a href="{{ route('brands.index') }}" class="btn btn-secondary">Cancel</a>
+                            <button type="submit" class="btn btn-primary" onclick="toastr.success('Brand will be updated!')">Update</button>
+                            <a href="{{ route('brands.index') }}" class="btn btn-secondary" onclick="toastr.info('Cancelled brand update')">Cancel</a>
                         </div>
                     </form>
                 </div>

@@ -63,6 +63,7 @@ class ProductController extends Controller
             'meta_title' => 'nullable|string',
             'meta_description' => 'nullable|string',
             'main_image' => 'nullable|file|image',
+            'gallery_images.*' => 'nullable|file|image',
             'category_id' => 'required|exists:categories,id',
             'brand_id' => 'required|exists:brands,id',
             'min_order_qty' => 'nullable|integer',
@@ -70,11 +71,18 @@ class ProductController extends Controller
             'sale_start_date' => 'nullable|date',
             'sale_end_date' => 'nullable|date',
         ]);
-        // Handle image upload
+        // Handle main image upload
         if ($request->hasFile('main_image')) {
             $validated['main_image'] = $request->file('main_image')->store('products', 'public');
         }
         $product = Product::create($validated);
+        // Handle gallery images upload
+        if ($request->hasFile('gallery_images')) {
+            foreach ($request->file('gallery_images') as $galleryImage) {
+                $path = $galleryImage->store('products', 'public');
+                $product->images()->create(['image_path' => $path]);
+            }
+        }
         if ($request->has('tags')) {
             $product->tags()->sync($request->input('tags'));
         }

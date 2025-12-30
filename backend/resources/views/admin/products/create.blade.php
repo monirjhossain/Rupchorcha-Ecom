@@ -186,6 +186,15 @@
                         </div>
                     </div>
                 </div>
+                <div class="card mb-4 shadow-sm">
+                    <div class="card-header bg-success text-white"><i class="fas fa-images mr-2"></i> Gallery Images</div>
+                    <div class="card-body">
+                        <div class="form-group mb-0">
+                            <input type="file" name="gallery_images[]" class="form-control" multiple>
+                            <small class="form-text text-muted">You can select multiple images for the product gallery.</small>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
         <div class="text-right mb-4">
@@ -197,8 +206,12 @@
 @endsection
 
 @section('scripts')
+<!-- Select2 CSS & JS CDN -->
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
+        // Slug auto-generate
         const nameInput = document.querySelector('input[name="name"]');
         const slugInput = document.querySelector('input[name="slug"]');
         if(nameInput && slugInput) {
@@ -208,6 +221,14 @@
                     .replace(/\s+/g, '-')
                     .replace(/-+/g, '-');
                 slugInput.value = slug;
+            });
+        }
+        // Initialize Select2 for tags
+        if (window.jQuery) {
+            $('#tags').select2({
+                placeholder: 'Select tags',
+                allowClear: true,
+                width: '100%'
             });
         }
     });

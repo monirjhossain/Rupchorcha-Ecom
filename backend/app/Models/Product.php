@@ -69,6 +69,12 @@ class Product extends Model
         return $this->belongsToMany(Tag::class, 'product_tag');
     }
 
+    // Add orders relationship (many-to-many)
+    public function orders()
+    {
+        return $this->belongsToMany(Order::class, 'order_items', 'product_id', 'order_id');
+    }
+
     protected static function boot()
     {
         parent::boot();
