@@ -25,6 +25,31 @@ class ProductController extends Controller
         if ($request->filled('brand_id')) {
             $query->where('brand_id', $request->brand_id);
         }
+        // Advanced filters
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+        if ($request->filled('stock_status')) {
+            if ($request->stock_status === 'in_stock') {
+                $query->where('stock_quantity', '>', 0);
+            } elseif ($request->stock_status === 'out_of_stock') {
+                $query->where(function($q) {
+                    $q->whereNull('stock_quantity')->orWhere('stock_quantity', '<=', 0);
+                });
+            }
+        }
+        if ($request->filled('price_min')) {
+            $query->where('price', '>=', $request->price_min);
+        }
+        if ($request->filled('price_max')) {
+            $query->where('price', '<=', $request->price_max);
+        }
+        if ($request->filled('created_from')) {
+            $query->whereDate('created_at', '>=', $request->created_from);
+        }
+        if ($request->filled('created_to')) {
+            $query->whereDate('created_at', '<=', $request->created_to);
+        }
         $products = $query->paginate(15)->appends($request->except('page'));
         $categories = \App\Models\Category::all();
         $brands = \App\Models\Brand::all();
@@ -37,7 +62,9 @@ class ProductController extends Controller
         $tags = Tag::all();
         $categories = Category::all();
         $brands = Brand::all();
-        return view('admin.products.create', compact('tags', 'categories', 'brands'));
+        $suppliers = \App\Models\Supplier::all();
+        $warehouses = \App\Models\Warehouse::all();
+        return view('admin.products.create', compact('tags', 'categories', 'brands', 'suppliers', 'warehouses'));
     }
 
     // Store a newly created product in storage
@@ -96,7 +123,9 @@ class ProductController extends Controller
         $tags = Tag::all();
         $categories = Category::all();
         $brands = Brand::all();
-        return view('admin.products.edit', compact('product', 'tags', 'categories', 'brands'));
+        $suppliers = \App\Models\Supplier::all();
+        $warehouses = \App\Models\Warehouse::all();
+        return view('admin.products.edit', compact('product', 'tags', 'categories', 'brands', 'suppliers', 'warehouses'));
     }
 
     // Update the specified product in storage
@@ -149,6 +178,50 @@ class ProductController extends Controller
         $product = Product::findOrFail($id);
         $product->delete();
         return redirect()->route('products.index')->with('success', 'Product deleted successfully.');
+    }
+
+        // Export selected product fields as CSV
+    public function export(Request $request)
+    {
+        $fields = $request->input('fields', []);
+        if (empty($fields)) {
+            return back()->with('error', 'Please select at least one field to export.');
+        }
+        $products = Product::with(['category', 'brand'])->get();
+        $csvData = [];
+        // Prepare header
+        $header = [];
+        foreach ($fields as $field) {
+            $header[] = ucfirst(str_replace('_', ' ', $field));
+        }
+        $csvData[] = $header;
+        // Prepare rows
+        foreach ($products as $product) {
+            $row = [];
+            foreach ($fields as $field) {
+                if ($field === 'category') {
+                    $row[] = $product->category->name ?? '';
+                } elseif ($field === 'brand') {
+                    $row[] = $product->brand->name ?? '';
+                } else {
+                    $row[] = $product->$field;
+                }
+            }
+            $csvData[] = $row;
+        }
+        // Output CSV
+        $filename = 'products_export_' . date('Ymd_His') . '.csv';
+        $handle = fopen('php://temp', 'r+');
+        foreach ($csvData as $row) {
+            fputcsv($handle, $row);
+        }
+        rewind($handle);
+        $csv = stream_get_contents($handle);
+        fclose($handle);
+        return response($csv, 200, [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => "attachment; filename=$filename"
+        ]);
     }
 
     public function bulkImport()

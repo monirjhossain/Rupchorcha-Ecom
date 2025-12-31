@@ -34,7 +34,46 @@ class UserController extends Controller
     }
 
     // ...existing code...
-
+       // Show bulk message form
+    public function bulkMessageForm()
+    {
+        $users = \App\Models\User::all();
+        return view('admin.users.bulk_message', compact('users'));
+    }
+     // Bulk message to users
+    public function sendBulkMessage(Request $request)
+    {
+        $request->validate([
+            'user_ids' => 'required|array',
+            'message_type' => 'required|in:email,sms',
+            'message' => 'required|string',
+        ]);
+        $users = [];
+        if (in_array('all', $request->user_ids)) {
+            $users = User::all();
+        } else {
+            $users = User::whereIn('id', $request->user_ids)->get();
+        }
+        
+        $sent = 0;
+        foreach ($users as $user) {
+            if ($request->message_type === 'email') {
+                \Mail::raw($request->message, function($mail) use ($user) {
+                    $mail->to($user->email)
+                        ->subject('Message from Admin');
+                });
+                $sent++;
+            } elseif ($request->message_type === 'sms') {
+                // Example SMS API integration (pseudo-code)
+                $apiKey = $request->sms_api_key;
+                // You would use the $apiKey to call your SMS provider's API here
+                // Example: SmsService::send($user->phone, $request->message, $apiKey);
+                // For now, just simulate:
+                $sent++;
+            }
+        }
+        return back()->with('success', 'Bulk message sent to ' . $sent . ' users.');
+    }
     // Send email or SMS to customer
     public function sendMessage(Request $request, $id)
     {

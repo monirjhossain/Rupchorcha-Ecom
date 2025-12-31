@@ -1,7 +1,5 @@
 <?php
-
 namespace App\Models;
-
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
@@ -37,6 +35,26 @@ class Product extends Model
         'sale_start_date',
         'sale_end_date',
     ];
+      public function supplier()
+    {
+        return $this->belongsTo(Supplier::class);
+    }
+        // Stock movements relationship
+    public function stockMovements()
+    {
+        return $this->hasMany(StockMovement::class);
+    }
+
+    // Calculate current stock from movements
+    public function getCurrentStockAttribute()
+    {
+        $movements = $this->stockMovements();
+        $count = $movements->count();
+        if ($count > 0) {
+            return $movements->sum('quantity');
+        }
+        return $this->stock_quantity ?? 0;
+    }
 
     // Relationships
     public function category()

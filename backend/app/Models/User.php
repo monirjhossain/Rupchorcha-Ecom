@@ -24,6 +24,18 @@ class User extends Authenticatable
         'address',
         'active',
     ];
+        // Permissions via role
+    public function permissions()
+    {
+        return $this->belongsToMany(Permission::class, 'role_permission', 'role', 'permission_id', 'role', 'id');
+    }
+
+    public function hasPermission($permission)
+    {
+        // Super admin always has all permissions
+        if ($this->role === 'super_admin') return true;
+        return $this->permissions()->where('name', $permission)->exists();
+    }
     public function orders()
     {
         return $this->hasMany(\App\Models\Order::class);

@@ -22,6 +22,7 @@
                                 <small class="form-text text-muted">URL-friendly version, auto-generated.</small>
                             </div>
                         </div>
+                                                <!-- Supplier dropdown moved to Pricing & Inventory box below -->
                         <div class="form-row">
                             <div class="form-group col-md-12">
                                 <label>Description <span class="text-danger">*</span></label>
@@ -68,8 +69,13 @@
                                 <input type="number" name="stock_quantity" class="form-control" required placeholder="0">
                             </div>
                             <div class="form-group col-md-4">
-                                <label>Stock In</label>
-                                <input type="text" name="stock_in" class="form-control" placeholder="Warehouse/Location">
+                                <label>Warehouse</label>
+                                <select name="warehouse_id" class="form-control">
+                                    <option value="">Select Warehouse</option>
+                                    @foreach($warehouses as $warehouse)
+                                        <option value="{{ $warehouse->id }}">{{ $warehouse->name }}</option>
+                                    @endforeach
+                                </select>
                             </div>
                             <div class="form-group col-md-4">
                                 <label>SKU</label>
@@ -98,10 +104,17 @@
                             </div>
                         </div>
                         <div class="form-row">
-                            <div class="form-group col-md-4">
-                                <label>Barcode</label>
-                                <input type="text" name="barcode" class="form-control" placeholder="Barcode">
+                            <div class="form-group col-md-8">
+                                <label>Supplier</label>
+                                <select name="supplier_id" class="form-control">
+                                    <option value="">Select Supplier</option>
+                                    @foreach($suppliers as $supplier)
+                                        <option value="{{ $supplier->id }}">{{ $supplier->name }}</option>
+                                    @endforeach
+                                </select>
                             </div>
+                        </div>
+                        <div class="form-row">
                             <div class="form-group col-md-4">
                                 <label>Manage Stock</label>
                                 <select name="manage_stock" class="form-control">

@@ -3,7 +3,56 @@
 @section('content')
 <div class="d-sm-flex align-items-center justify-content-between mb-4">
     <h1 class="h3 mb-0 text-gray-800">Users</h1>
-    <a href="{{ url('/admin/users/create') }}" class="btn btn-primary">+ Create User</a>
+    <div>
+        <a href="{{ url('/admin/users/create') }}" class="btn btn-primary">+ Create User</a>
+        <button type="button" class="btn btn-success ml-2" data-toggle="modal" data-target="#bulkMessageModal">Bulk Message</button>
+    </div>
+</div>
+<!-- Bulk Message Modal -->
+<div class="modal fade" id="bulkMessageModal" tabindex="-1" role="dialog" aria-labelledby="bulkMessageModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <form method="POST" action="{{ route('users.bulk_message') }}">
+                @csrf
+                <div class="modal-header">
+                    <h5 class="modal-title" id="bulkMessageModalLabel">Send Bulk Message</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="bulk_users">Select Users</label>
+                        <select name="user_ids[]" id="bulk_users" class="form-control" multiple required>
+                            <option value="all">All Users</option>
+                            @foreach($users as $user)
+                                <option value="{{ $user->id }}">{{ $user->name }} ({{ $user->email }})</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="bulk_message_type">Type</label>
+                        <select name="message_type" id="bulk_message_type" class="form-control" required onchange="document.getElementById('smsApiKeyGroup').style.display = this.value === 'sms' ? 'block' : 'none';">
+                            <option value="email">Email</option>
+                            <option value="sms">SMS</option>
+                        </select>
+                    </div>
+                    <div class="form-group" id="smsApiKeyGroup" style="display:none;">
+                        <label for="sms_api_key">SMS API Key</label>
+                        <input type="text" name="sms_api_key" id="sms_api_key" class="form-control" placeholder="Enter SMS API Key">
+                    </div>
+                    <div class="form-group">
+                        <label for="bulk_message">Message</label>
+                        <textarea name="message" id="bulk_message" class="form-control" rows="3" required></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-success">Send</button>
+                </div>
+            </form>
+        </div>
+    </div>
 </div>
 <!-- User Search & Filter -->
 <form method="GET" action="" class="mb-4">
@@ -64,15 +113,48 @@
                                 </form>
                             </td>
                             <td>
-                                <!-- Edit/Delete buttons will go here -->
-                                <a href="{{ url('/admin/users/' . $user->id) }}" class="btn btn-sm btn-secondary">View</a>
-                                <a href="{{ url('/admin/users/' . $user->id . '/edit') }}" class="btn btn-sm btn-info">Edit</a>
-                                @if(($user->role ?? '') !== 'super_admin')
-                                <form action="{{ route('users.destroy', $user->id) }}" method="POST" style="display:inline-block;" onsubmit="return confirm('Are you sure you want to delete this user?');">
-                                    @csrf
-                                    <button type="submit" class="btn btn-sm btn-danger">Delete</button>
-                                </form>
-                                @endif
+                                                                <a href="{{ url('/admin/users/' . $user->id) }}" class="btn btn-sm btn-secondary">View</a>
+                                                                <a href="{{ url('/admin/users/' . $user->id . '/edit') }}" class="btn btn-sm btn-info">Edit</a>
+                                                                <button type="button" class="btn btn-sm btn-primary" data-toggle="modal" data-target="#messageModal{{ $user->id }}">Message</button>
+                                                                @if(($user->role ?? '') !== 'super_admin')
+                                                                <form action="{{ route('users.destroy', $user->id) }}" method="POST" style="display:inline-block;" onsubmit="return confirm('Are you sure you want to delete this user?');">
+                                                                        @csrf
+                                                                        <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+                                                                </form>
+                                                                @endif
+                                                                <!-- Message Modal -->
+                                                                <div class="modal fade" id="messageModal{{ $user->id }}" tabindex="-1" role="dialog" aria-labelledby="messageModalLabel{{ $user->id }}" aria-hidden="true">
+                                                                    <div class="modal-dialog" role="document">
+                                                                        <div class="modal-content">
+                                                                            <form method="POST" action="{{ route('users.message', $user->id) }}">
+                                                                                @csrf
+                                                                                <div class="modal-header">
+                                                                                    <h5 class="modal-title" id="messageModalLabel{{ $user->id }}">Send Message to {{ $user->name }}</h5>
+                                                                                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                                                                        <span aria-hidden="true">&times;</span>
+                                                                                    </button>
+                                                                                </div>
+                                                                                <div class="modal-body">
+                                                                                    <div class="form-group">
+                                                                                        <label for="message_type_{{ $user->id }}">Type</label>
+                                                                                        <select name="message_type" id="message_type_{{ $user->id }}" class="form-control" required>
+                                                                                            <option value="email">Email</option>
+                                                                                            <option value="sms">SMS</option>
+                                                                                        </select>
+                                                                                    </div>
+                                                                                    <div class="form-group">
+                                                                                        <label for="message_{{ $user->id }}">Message</label>
+                                                                                        <textarea name="message" id="message_{{ $user->id }}" class="form-control" rows="3" required></textarea>
+                                                                                    </div>
+                                                                                </div>
+                                                                                <div class="modal-footer">
+                                                                                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                                                                                    <button type="submit" class="btn btn-primary">Send</button>
+                                                                                </div>
+                                                                            </form>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
                             </td>
                         </tr>
                         @endif

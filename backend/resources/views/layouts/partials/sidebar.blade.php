@@ -43,6 +43,8 @@
             <div class="bg-white py-2 collapse-inner rounded">
                 <a class="collapse-item" href="/admin/users">User List</a>
                 <a class="collapse-item" href="{{ route('users.activity_logs') }}">User Activity Log</a>
+                <a class="collapse-item" href="{{ route('users.bulk_message_form') }}">Bulk Message</a>
+
             </div>
         </div>
     </li>
@@ -57,13 +59,17 @@
         </a>
         <div id="collapseInventory" class="collapse" aria-labelledby="headingInventory" data-parent="#accordionSidebar">
             <div class="bg-white py-2 collapse-inner rounded">
-                <a class="collapse-item" href="/admin/products">Products</a>
+                <a class="collapse-item" href="/admin/inventory">Inventory Dashboard</a>
+                <a class="collapse-item" href="/admin/products">All Products</a>
                 <a class="collapse-item" href="/admin/products/create">Create Product</a>
                 <a class="collapse-item" href="/admin/categories">Categories</a>
                 <a class="collapse-item" href="/admin/brands">Brands</a>
                 <a class="collapse-item" href="/admin/attributes">Attributes</a>
                 <a class="collapse-item" href="/admin/tags">Product Tags</a>
                 <a class="collapse-item" href="/admin/products/bulk-import">Product Bulk Import</a>
+                <div class="dropdown-divider"></div>
+                <a class="collapse-item" href="{{ route('suppliers.index') }}">Suppliers</a>
+                <a class="collapse-item" href="{{ route('warehouses.index') }}">Warehouses</a>
             </div>
         </div>
     </li>

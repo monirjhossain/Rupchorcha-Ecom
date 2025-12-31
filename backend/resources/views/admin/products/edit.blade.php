@@ -69,8 +69,13 @@
                                 <input type="number" name="stock_quantity" class="form-control" value="{{ $product->stock_quantity }}" required placeholder="0">
                             </div>
                             <div class="form-group col-md-4">
-                                <label>Stock In</label>
-                                <input type="text" name="stock_in" class="form-control" value="{{ $product->stock_in }}" placeholder="Warehouse/Location">
+                                <label>Warehouse</label>
+                                <select name="warehouse_id" class="form-control">
+                                    <option value="">Select Warehouse</option>
+                                    @foreach($warehouses as $warehouse)
+                                        <option value="{{ $warehouse->id }}" @if($product->warehouse_id == $warehouse->id) selected @endif>{{ $warehouse->name }}</option>
+                                    @endforeach
+                                </select>
                             </div>
                             <div class="form-group col-md-4">
                                 <label>SKU</label>
@@ -95,6 +100,17 @@
                                 <select name="featured" class="form-control">
                                     <option value="0" @if(!$product->featured) selected @endif>No</option>
                                     <option value="1" @if($product->featured) selected @endif>Yes</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group col-md-4">
+                                <label>Supplier</label>
+                                <select name="supplier_id" class="form-control">
+                                    <option value="">Select Supplier</option>
+                                    @foreach($suppliers as $supplier)
+                                        <option value="{{ $supplier->id }}" @if($product->supplier_id == $supplier->id) selected @endif>{{ $supplier->name }}</option>
+                                    @endforeach
                                 </select>
                             </div>
                         </div>
@@ -189,6 +205,43 @@
                             <small class="form-text text-muted">Upload main product image.</small>
                         </div>
                     </div>
+                </div>
+            </div>
+        </div>
+        <div class="mb-4">
+            <div class="alert alert-info">
+                <strong>Current Stock:</strong> {{ $product->current_stock }}
+            </div>
+            <a href="{{ route('products.stock_movement.create', $product->id) }}" class="btn btn-warning mb-2">
+                <i class="fas fa-exchange-alt mr-1"></i> Stock Movement
+            </a>
+            <div class="card mt-3">
+                <div class="card-header bg-secondary text-white">Stock Movement Log</div>
+                <div class="card-body p-0">
+                    <table class="table table-sm mb-0">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Type</th>
+                                <th>Quantity</th>
+                                <th>Reason</th>
+                                <th>User</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        @forelse($product->stockMovements()->latest()->limit(10)->get() as $movement)
+                            <tr>
+                                <td>{{ $movement->created_at->format('Y-m-d H:i') }}</td>
+                                <td>{{ ucfirst($movement->type) }}</td>
+                                <td>{{ $movement->quantity }}</td>
+                                <td>{{ $movement->reason }}</td>
+                                <td>{{ $movement->user->name ?? 'N/A' }}</td>
+                            </tr>
+                        @empty
+                            <tr><td colspan="5" class="text-center">No stock movements found.</td></tr>
+                        @endforelse
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
