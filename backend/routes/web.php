@@ -19,6 +19,8 @@ use App\Http\Controllers\PurchaseOrderController;
 use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\UserActivityLogController;
 use App\Http\Controllers\WarehouseController;
+use App\Http\Controllers\ShippingMethodController;
+use App\Http\Controllers\ShippingZoneController;
 
 Route::post('/admin/products/export', [ProductController::class, 'export'])->name('products.export');
 // Inventory management UI
@@ -123,6 +125,32 @@ Route::middleware(['auth', 'role:admin,super_admin'])->group(function () {
     Route::get('/admin/purchase-orders/{purchase_order}/pdf', [PurchaseOrderController::class, 'pdf'])->name('purchase_orders.pdf');
     Route::resource('/admin/purchase-orders',PurchaseOrderController::class)->names('purchase_orders');
 }); 
+
+// Shipping Methods & Zones (admin)
+Route::middleware(['auth', 'role:admin,super_admin'])->group(function () {
+    Route::resource('/admin/shipping-methods', ShippingMethodController::class);
+    Route::resource('/admin/shipping-zones', ShippingZoneController::class);
+});
+
+// Shipping: Add method to zone
+Route::post('/admin/shipping-zones/{zone}/methods', [
+    App\Http\Controllers\ShippingZoneController::class,
+    'storeMethod'
+])->name('shipping-zones.methods.store');
+
+// Shipping Method Conditions
+Route::get('/admin/shipping-methods/{method}/conditions', [
+    App\Http\Controllers\ShippingMethodController::class,
+    'conditions'
+])->name('shipping-methods.conditions');
+Route::post('/admin/shipping-methods/{method}/conditions', [
+    App\Http\Controllers\ShippingMethodController::class,
+    'storeCondition'
+])->name('shipping-methods.conditions.store');
+Route::delete('/admin/shipping-methods/{method}/conditions/{condition}', [
+    App\Http\Controllers\ShippingMethodController::class,
+    'destroyCondition'
+])->name('shipping-methods.conditions.destroy');
 
 /*
 |--------------------------------------------------------------------------

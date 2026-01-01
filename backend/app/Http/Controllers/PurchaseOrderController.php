@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\PurchaseOrder;
 use App\Models\Supplier;
+use App\Models\ShippingMethod;
+use App\Models\ShippingZone;
 use Illuminate\Http\Request;
 
 class PurchaseOrderController extends Controller
@@ -154,12 +156,12 @@ class PurchaseOrderController extends Controller
     }
 
         public function edit($id)
-    {
-        $order = \App\Models\PurchaseOrder::with('items')->findOrFail($id);
-        $suppliers = \App\Models\Supplier::all();
-        $products = \App\Models\Product::all();
-        return view('admin.purchase_orders.edit', compact('order', 'suppliers', 'products'));
-    }
+        {
+            $order = \App\Models\PurchaseOrder::with('items')->findOrFail($id);
+            $suppliers = \App\Models\Supplier::all();
+            $products = \App\Models\Product::all();
+            return view('admin.purchase_orders.edit', compact('order', 'suppliers', 'products'));
+        }
      public function pdf($id)
     {
         $order = \App\Models\PurchaseOrder::with(['items.product', 'supplier'])->findOrFail($id);

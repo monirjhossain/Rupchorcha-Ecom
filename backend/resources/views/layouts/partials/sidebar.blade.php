@@ -89,6 +89,23 @@
             </div>
         </div>
     </li>
+    <!-- Shipping Section -->
+    <hr class="sidebar-divider">
+    <div class="sidebar-heading">Shipping</div>
+    <li class="nav-item">
+        <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseShipping" aria-expanded="false" aria-controls="collapseShipping">
+            <i class="fas fa-shipping-fast fa-fw"></i>
+            <span>Shipping</span>
+        </a>
+        <div id="collapseShipping" class="collapse" aria-labelledby="headingShipping" data-parent="#accordionSidebar">
+            <div class="bg-white py-2 collapse-inner rounded">
+                <a class="collapse-item" href="{{ route('shipping-zones.index') }}">Shipping Zones</a>
+                <a class="collapse-item" href="{{ route('shipping-methods.index') }}">Shipping Methods</a>
+                <a class="collapse-item" href="{{ route('shipping-methods.conditions', 1) }}">Shipping Conditions</a>
+            </div>
+        </div>
+    </li>
+    <!-- End Shipping Section -->
     <!-- Order Management Section -->
     <hr class="sidebar-divider">
     <li class="nav-item">
@@ -101,6 +118,7 @@
                 <a class="collapse-item" href="{{ route('orders.index') }}">Orders</a>
                 <a class="collapse-item" href="{{ route('coupons.index') }}">Coupon</a>
                 <a class="collapse-item" href="{{ route('discounts.index') }}">Discount</a>
+                <a class="collapse-item" href="{{ url('/admin/shipping-methods') }}">Shipping Methods</a>
                 <!-- Future: Add more order-related links here -->
             </div>
         </div>

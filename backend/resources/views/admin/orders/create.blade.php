@@ -207,7 +207,7 @@
                         <div class="row align-items-end mb-3" id="product-input-row">
                             <div class="form-group col-md-5 mb-2">
                                 <label class="font-weight-bold" for="product-search">Product</label>
-                                <input type="text" id="product-search" class="form-control" placeholder="Type product name..." autocomplete="off">
+                                <input type="text" id="product-search" class="form-control" placeholder="Type product name/SKU" autocomplete="off">
                                 <input type="hidden" id="product-id" value="">
                                 <div id="product-search-list" class="list-group position-absolute w-100" style="z-index: 1000; display: none;"></div>
                             </div>
@@ -224,7 +224,7 @@
                                 <input type="text" id="input-subtotal" class="form-control bg-light font-weight-bold" readonly>
                             </div>
                             <div class="form-group col-md-1 mb-2 text-center">
-                                <button type="button" class="btn btn-info" id="add-product-btn"><i class="fas fa-plus"></i> Add</button>
+                                <!-- Add button removed: product is added on click from dropdown -->
                             </div>
                         </div>
                         <div class="table-responsive">
@@ -260,13 +260,23 @@
                                 </div>
                                 <div class="form-group mt-3">
                                     <label for="coupon_code">Coupon Code</label>
-                                    <input type="text" name="coupon_code" id="coupon_code" class="form-control" placeholder="Enter coupon code">
+                                    <div class="input-group">
+                                        <input type="text" name="coupon_code" id="coupon_code" class="form-control" placeholder="Enter coupon code">
+                                        <input type="hidden" id="coupon-amount" value="0">
+                                        <div class="input-group-append">
+                                            <button type="button" class="btn btn-outline-secondary" id="apply-coupon-btn">Apply</button>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="form-group">
-                                    <label for="total">Total</label>
+                                    <label for="total">Subtotal</label>
                                     <input type="number" step="0.01" name="total" id="total" class="form-control" readonly required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="grand-total">Grand Total</label>
+                                    <input type="number" step="0.01" name="grand_total" id="grand-total" class="form-control bg-light font-weight-bold" readonly>
                                 </div>
                             </div>
                         </div>
@@ -287,11 +297,46 @@
 // Product data for autocomplete (server-side rendered)
 const products = [
     @foreach(App\Models\Product::orderBy('name')->get() as $product)
-        { id: {{ $product->id }}, name: @json($product->name), price: {{ $product->price }} },
+        { id: {{ $product->id }}, name: @json($product->name), sku: @json($product->sku), price: {{ $product->price }} },
     @endforeach
 ];
 
 $(document).ready(function() {
+        // Coupon logic: subtract coupon value from total
+        function updateTotalWithCoupon() {
+            let total = 0;
+            $('#added-products-table tbody tr').each(function() {
+                total += parseFloat($(this).find('.row-subtotal').text()) || 0;
+            });
+            let coupon = 0;
+            const couponVal = $('#coupon_code').val();
+            if (couponVal && !isNaN(parseFloat(couponVal))) {
+                coupon = parseFloat(couponVal);
+            }
+            let finalTotal = total - coupon;
+            if (finalTotal < 0) finalTotal = 0;
+            $('#total').val(finalTotal.toFixed(2));
+        }
+
+        // Only apply coupon when button is clicked
+        $('#apply-coupon-btn').on('click', function() {
+            updateTotalWithCoupon();
+        });
+
+        // Update total when products change
+        const oldAddRow = $('#product-search-list').data('events')?.click?.[0]?.handler;
+        $('#product-search-list').off('click').on('click', 'button', function() {
+            // ...existing code for adding row...
+            // Optionally update total
+            updateTotalWithCoupon();
+            // ...existing code...
+        });
+
+        // Also update total if a row is removed
+        $('#added-products-table').on('click', '.remove-row', function() {
+            $(this).closest('tr').remove();
+            updateTotalWithCoupon();
+        });
     // Autocomplete for product search
     $('#product-search').on('input', function() {
         const query = $(this).val().toLowerCase();
@@ -299,14 +344,17 @@ $(document).ready(function() {
             $('#product-search-list').hide();
             return;
         }
-        const matches = products.filter(p => p.name.toLowerCase().includes(query));
+        const matches = products.filter(p =>
+            (p.name && p.name.toLowerCase().includes(query)) ||
+            (p.sku && p.sku.toLowerCase().includes(query))
+        );
         if (matches.length === 0) {
             $('#product-search-list').hide();
             return;
         }
         let html = '';
         matches.forEach(p => {
-            html += `<button type="button" class="list-group-item list-group-item-action" data-id="${p.id}" data-name="${p.name}" data-price="${p.price}">${p.name} <span class='text-muted'>(৳${p.price})</span></button>`;
+            html += `<button type="button" class="list-group-item list-group-item-action" data-id="${p.id}" data-name="${p.name}" data-price="${p.price}">${p.name} <span class='text-muted'>(SKU: ${p.sku ? p.sku : 'N/A'}, ৳${p.price})</span></button>`;
         });
         $('#product-search-list').html(html).show();
     });
@@ -351,7 +399,6 @@ $(document).ready(function() {
     // Hide dropdown on blur (with delay for click)
     $('#product-search').on('blur', function() {
         setTimeout(() => $('#product-search-list').hide(), 200);
-    });
 });
 </script>
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
@@ -361,72 +408,44 @@ if (typeof jQuery === 'undefined') {
     alert('jQuery not loaded!');
 }
 $(document).ready(function() {
-    console.log('Order create JS loaded');
-    function updateInputSubtotal() {
-        const qty = parseFloat($('#input-quantity').val()) || 0;
-        const price = parseFloat($('#input-unit-price').val()) || 0;
-        $('#input-subtotal').val((qty * price).toFixed(2));
-    }
-    function updateOrderTotal() {
+    function updateTotalWithCoupon() {
         let total = 0;
         $('#added-products-table tbody tr').each(function() {
             total += parseFloat($(this).find('.row-subtotal').text()) || 0;
         });
+        let coupon = parseFloat($('#coupon-amount').val()) || 0;
+        let grandTotal = total - coupon;
+        if (grandTotal < 0) grandTotal = 0;
         $('#total').val(total.toFixed(2));
+        $('#grand-total').val(grandTotal.toFixed(2));
     }
-    function clearProductInputs() {
-        $('#input-product-id').val('').trigger('change');
-        $('#input-quantity').val('1');
-        $('#input-unit-price').val('');
-        $('#input-subtotal').val('');
-    }
-    $('.product-select').select2({
-        placeholder: '🔍 Search or select product',
-        allowClear: true,
-        width: '100%'
-    });
-    // Update subtotal when quantity or price changes
-    $('#input-quantity, #input-unit-price').on('input', updateInputSubtotal);
 
-    // Autofill price and update subtotal when product changes
-    $('#input-product-id').on('change', function() {
-        var cost = $(this).find('option:selected').data('cost-price');
-        if (typeof cost !== 'undefined' && cost !== null && cost !== '') {
-            $('#input-unit-price').val(cost);
+    // Apply coupon only when button is clicked
+    $('#apply-coupon-btn').on('click', function() {
+        let code = $('#coupon_code').val().trim();
+        let couponValue = 0;
+        if (code === 'User123') {
+            couponValue = 100; // Example: 100 off
         } else {
-            $('#input-unit-price').val('');
+            couponValue = 0;
         }
-        updateInputSubtotal();
+        $('#coupon-amount').val(couponValue);
+        updateTotalWithCoupon();
     });
 
-    // Also update subtotal if product is re-selected
-    $('#input-product-id').on('select2:select', function() {
-        var cost = $(this).find('option:selected').data('cost-price');
-        if (typeof cost !== 'undefined' && cost !== null && cost !== '') {
-            $('#input-unit-price').val(cost);
-        } else {
-            $('#input-unit-price').val('');
-        }
-        updateInputSubtotal();
-    });
-    $('#add-product-btn').on('click', function() {
-        console.log('Add Product button clicked');
-        const productId = $('#input-product-id').val();
-        const productText = $('#input-product-id option:selected').text();
+    // Add product row (from autocomplete/typeahead)
+    $('#product-search-list').on('click', 'button', function() {
+        const id = $(this).data('id');
+        const name = $(this).data('name');
+        const price = $(this).data('price');
         const qty = parseInt($('#input-quantity').val()) || 1;
-        const price = parseFloat($('#input-unit-price').val()) || 0;
         const subtotal = (qty * price).toFixed(2);
-        if (!productId || qty < 1 || price < 0) {
-            alert('Please select a product and enter valid quantity and price.');
-            return;
-        }
-        // Add row to table with hidden inputs for form submission
-        const row = `<tr data-product-id="${productId}">
+        const row = `<tr data-product-id="${id}">
             <td>
-                <input type="hidden" name="product_id[]" value="${productId}">
+                <input type="hidden" name="product_id[]" value="${id}">
                 <input type="hidden" name="quantity[]" value="${qty}">
                 <input type="hidden" name="unit_price[]" value="${price}">
-                ${productText}
+                ${name}
             </td>
             <td>${qty}</td>
             <td>৳${price.toFixed(2)}</td>
@@ -434,15 +453,24 @@ $(document).ready(function() {
             <td><button type="button" class="btn btn-sm btn-danger remove-row"><i class="fas fa-trash"></i></button></td>
         </tr>`;
         $('#added-products-table tbody').append(row);
-        updateOrderTotal();
-        clearProductInputs();
+        updateTotalWithCoupon();
+        // Clear input fields
+        $('#product-search').val('');
+        $('#product-id').val('');
+        $('#input-unit-price').val('');
+        $('#input-subtotal').val('');
+        $('#product-search-list').hide();
+        $('#input-quantity').val('1');
     });
+
+    // Remove product row
     $('#added-products-table').on('click', '.remove-row', function() {
         $(this).closest('tr').remove();
-        updateOrderTotal();
+        updateTotalWithCoupon();
     });
-    // Initial subtotal
-    updateInputSubtotal();
+
+    // Initial total
+    updateTotalWithCoupon();
 });
 </script>
 @endpush
