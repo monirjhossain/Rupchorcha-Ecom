@@ -83,6 +83,24 @@
                             </div>
                         </div>
                         <div class="form-row">
+                            <div class="form-group col-md-6">
+                                <label>Supplier</label>
+                                <select name="supplier_id" class="form-control">
+                                    <option value="">Select Supplier</option>
+                                    @foreach($suppliers as $supplier)
+                                        <option value="{{ $supplier->id }}">{{ $supplier->name }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div class="form-group col-md-6">
+                                <label>Manage Stock</label>
+                                <select name="manage_stock" class="form-control">
+                                    <option value="1">Yes</option>
+                                    <option value="0">No</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-row">
                             <div class="form-group col-md-4">
                                 <label>Type <span class="text-danger">*</span></label>
                                 <input type="text" name="type" class="form-control" value="simple" required>
@@ -103,30 +121,13 @@
                                 </select>
                             </div>
                         </div>
+                        
                         <div class="form-row">
-                            <div class="form-group col-md-8">
-                                <label>Supplier</label>
-                                <select name="supplier_id" class="form-control">
-                                    <option value="">Select Supplier</option>
-                                    @foreach($suppliers as $supplier)
-                                        <option value="{{ $supplier->id }}">{{ $supplier->name }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
-                        </div>
-                        <div class="form-row">
-                            <div class="form-group col-md-4">
-                                <label>Manage Stock</label>
-                                <select name="manage_stock" class="form-control">
-                                    <option value="1">Yes</option>
-                                    <option value="0">No</option>
-                                </select>
-                            </div>
-                            <div class="form-group col-md-4">
+                            <div class="form-group col-md-6">
                                 <label>Min Order Qty</label>
                                 <input type="number" name="min_order_qty" class="form-control" placeholder="Minimum">
                             </div>
-                            <div class="form-group col-md-4">
+                            <div class="form-group col-md-6">
                                 <label>Max Order Qty</label>
                                 <input type="number" name="max_order_qty" class="form-control" placeholder="Maximum">
                             </div>

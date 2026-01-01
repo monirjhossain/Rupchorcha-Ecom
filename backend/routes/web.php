@@ -1,5 +1,6 @@
 <?php
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\ReportController;
 use App\Http\Controllers\PaymentSummaryController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\DashboardReportController;
@@ -14,7 +15,10 @@ use App\Http\Controllers\ProductImageController;
 use App\Http\Controllers\ProductDownloadController;
 use App\Http\Controllers\CouponController;
 use App\Http\Controllers\DiscountController;
-
+use App\Http\Controllers\PurchaseOrderController;
+use App\Http\Controllers\SupplierController;
+use App\Http\Controllers\UserActivityLogController;
+use App\Http\Controllers\WarehouseController;
 
 Route::post('/admin/products/export', [ProductController::class, 'export'])->name('products.export');
 // Inventory management UI
@@ -32,13 +36,41 @@ Route::get('/report/total/export', [DashboardReportController::class, 'exportTot
 Route::get('/report/max-products', [DashboardReportController::class, 'maxProductsReport'])->name('report.max_products');
 Route::get('/report/max-products/export', [DashboardReportController::class, 'exportMaxProductsReport'])->name('report.max_products.export');
 
-Route::get('/admin/users/activity-logs', [App\Http\Controllers\UserActivityLogController::class, 'index'])->name('users.activity_logs');
-Route::get('/admin/users/{id}/activity-logs', [App\Http\Controllers\UserActivityLogController::class, 'show'])->name('users.activity_logs_user');
+// Advanced Reports & Analytics
+Route::middleware(['auth', 'role:admin,super_admin'])->group(function () {
+    Route::get('/admin/reports', [ReportController::class, 'index'])->name('reports.index');
+    Route::get('/admin/reports/sales', [ReportController::class, 'sales'])->name('reports.sales');
+    Route::get('/admin/reports/sales/export/{type}', [ReportController::class, 'exportSales'])->name('reports.sales.export');
+    Route::get('/admin/reports/revenue', [ReportController::class, 'revenue'])->name('reports.revenue');
+    Route::get('/admin/reports/revenue/export/{type}', [ReportController::class, 'exportRevenue'])->name('reports.revenue.export');
+    Route::get('/admin/reports/top-products', [ReportController::class, 'topProducts'])->name('reports.top_products');
+    Route::get('/admin/reports/top-products/export/{type}', [ReportController::class, 'exportTopProducts'])->name('reports.top_products.export');
+    Route::get('/admin/reports/customers', [ReportController::class, 'customers'])->name('reports.customers');
+    Route::get('/admin/reports/customers/export/{type}', [ReportController::class, 'exportCustomers'])->name('reports.customers.export');
+});
+
+Route::get('/admin/users/activity-logs', [UserActivityLogController::class, 'index'])->name('users.activity_logs');
+Route::get('/admin/users/{id}/activity-logs', [UserActivityLogController::class, 'show'])->name('users.activity_logs_user');
 Route::get('/admin/payments/summary', [PaymentSummaryController::class, 'index'])->name('payments.summary');
 Route::post('/admin/users/{id}/toggle', [UserController::class, 'toggleActive'])->name('users.toggle');
 Route::post('/admin/users/{id}/message', [UserController::class, 'sendMessage'])->name('users.message');
 Route::get('/admin/users/bulk-message', [UserController::class, 'bulkMessageForm'])->name('users.bulk_message_form');
 Route::post('/admin/users/bulk-message', [UserController::class, 'sendBulkMessage'])->name('users.bulk_message');
+
+// Supplier, Warehouse, and Purchase Order admin routes
+Route::middleware(['auth', 'role:admin,super_admin'])->group(function () {
+    Route::resource('/admin/suppliers', SupplierController::class)->names('suppliers');
+    Route::resource('/admin/warehouses', WarehouseController::class)->names('warehouses');
+    Route::get('/admin/purchase-orders/{purchase_order}/pdf', [PurchaseOrderController::class, 'pdf'])->name('purchase_orders.pdf');
+    Route::get('/admin/purchase-orders/{purchase_order}/preview', [PurchaseOrderController::class, 'show'])->name('purchase_orders.preview');
+    Route::resource('/admin/purchase-orders', PurchaseOrderController::class)->names('purchase_orders');
+    Route::get('/admin/purchase-orders/{purchase_order}/show', [PurchaseOrderController::class, 'showDetails'])->name('purchase_orders.showDetails');
+    Route::post('/admin/purchase-orders/{purchase_order}/update-status', [PurchaseOrderController::class, 'updateStatus'])->name('purchase_orders.updateStatus');
+    Route::post('/admin/purchase-orders/{purchase_order}/approve', [PurchaseOrderController::class, 'approve'])->name('purchase_orders.approve');
+    Route::post('/admin/purchase-orders/{purchase_order}/reject', [PurchaseOrderController::class, 'reject'])->name('purchase_orders.reject');
+    Route::post('/admin/purchase-orders/{purchase_order}/cancel', [PurchaseOrderController::class, 'cancel'])->name('purchase_orders.cancel');
+    Route::post('/admin/purchase-orders/{purchase_order}/receive-goods', [PurchaseOrderController::class, 'receiveGoods'])->name('purchase_orders.receiveGoods');
+});
 
 // Authentication routes
 Route::get('/register', [UserController::class, 'showRegistrationForm'])->name('register');
@@ -84,10 +116,12 @@ Route::resource('/admin/tags', TagController::class);
 Route::resource('/admin/product-images', ProductImageController::class)->only(['index','create','store','destroy']);
 Route::resource('/admin/product-downloads', ProductDownloadController::class)->only(['index','create','store','destroy']);
 
-// Supplier and Warehouse admin routes
+// Supplier, Warehouse, and Purchase Order admin routes
 Route::middleware(['auth', 'role:admin,super_admin'])->group(function () {
-    Route::resource('/admin/suppliers', App\Http\Controllers\SupplierController::class)->names('suppliers');
-    Route::resource('/admin/warehouses', App\Http\Controllers\WarehouseController::class)->names('warehouses');
+    Route::resource('/admin/suppliers', SupplierController::class)->names('suppliers');
+    Route::resource('/admin/warehouses', WarehouseController::class)->names('warehouses');
+    Route::get('/admin/purchase-orders/{purchase_order}/pdf', [PurchaseOrderController::class, 'pdf'])->name('purchase_orders.pdf');
+    Route::resource('/admin/purchase-orders',PurchaseOrderController::class)->names('purchase_orders');
 }); 
 
 /*

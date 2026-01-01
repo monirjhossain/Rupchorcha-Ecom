@@ -1,4 +1,3 @@
-
 @extends('layouts.admin')
 
 @section('content')
@@ -205,34 +204,43 @@
                 <div class="card mb-4 shadow-sm">
                     <div class="card-header bg-warning text-dark"><i class="fas fa-boxes mr-2"></i> Order Items</div>
                     <div class="card-body">
-                        <table class="table table-bordered" id="order-items-table">
-                            <thead>
-                                <tr>
-                                    <th style="width:40%">Product</th>
-                                    <th style="width:15%">Price</th>
-                                    <th style="width:15%">Qty</th>
-                                    <th style="width:15%">Subtotal</th>
-                                    <th style="width:15%"></th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td>
-                                        <select name="products[]" class="form-control select2-product" required>
-                                            <option value="">Select product</option>
-                                            @foreach(App\Models\Product::orderBy('name')->get() as $product)
-                                                <option value="{{ $product->id }}" data-price="{{ $product->price }}">{{ $product->name }} (৳{{ $product->price }})</option>
-                                            @endforeach
-                                        </select>
-                                    </td>
-                                    <td><input type="number" name="prices[]" class="form-control price-input" step="0.01" min="0" required></td>
-                                    <td><input type="number" name="quantities[]" class="form-control qty-input" min="1" value="1" required></td>
-                                    <td><input type="number" name="subtotals[]" class="form-control subtotal-input" readonly></td>
-                                    <td><button type="button" class="btn btn-danger btn-sm remove-row"><i class="fas fa-trash"></i></button></td>
-                                </tr>
-                            </tbody>
-                        </table>
-                        <button type="button" class="btn btn-secondary btn-sm" id="add-order-item"><i class="fas fa-plus"></i> Add Product</button>
+                        <div class="row align-items-end mb-3" id="product-input-row">
+                            <div class="form-group col-md-5 mb-2">
+                                <label class="font-weight-bold" for="product-search">Product</label>
+                                <input type="text" id="product-search" class="form-control" placeholder="Type product name..." autocomplete="off">
+                                <input type="hidden" id="product-id" value="">
+                                <div id="product-search-list" class="list-group position-absolute w-100" style="z-index: 1000; display: none;"></div>
+                            </div>
+                            <div class="form-group col-md-2 mb-2">
+                                <label class="font-weight-bold">Quantity</label>
+                                <input type="number" id="input-quantity" class="form-control" min="1" value="1">
+                            </div>
+                            <div class="form-group col-md-2 mb-2">
+                                <label class="font-weight-bold">Unit Price</label>
+                                <input type="number" id="input-unit-price" class="form-control" min="0" step="0.01">
+                            </div>
+                            <div class="form-group col-md-2 mb-2">
+                                <label class="font-weight-bold">Subtotal</label>
+                                <input type="text" id="input-subtotal" class="form-control bg-light font-weight-bold" readonly>
+                            </div>
+                            <div class="form-group col-md-1 mb-2 text-center">
+                                <button type="button" class="btn btn-info" id="add-product-btn"><i class="fas fa-plus"></i> Add</button>
+                            </div>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table table-bordered table-hover bg-white" id="added-products-table">
+                                <thead class="thead-light">
+                                    <tr>
+                                        <th>Product</th>
+                                        <th>Quantity</th>
+                                        <th>Unit Price</th>
+                                        <th>Subtotal</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
                 <!-- Order Summary -->
@@ -274,52 +282,232 @@
 </div>
 @endsection
 
-@section('scripts')
-<!-- Select2 CSS & JS CDN -->
-<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+@push('scripts')
+<script>
+// Product data for autocomplete (server-side rendered)
+const products = [
+    @foreach(App\Models\Product::orderBy('name')->get() as $product)
+        { id: {{ $product->id }}, name: @json($product->name), price: {{ $product->price }} },
+    @endforeach
+];
+
+$(document).ready(function() {
+    // Autocomplete for product search
+    $('#product-search').on('input', function() {
+        const query = $(this).val().toLowerCase();
+        if (!query) {
+            $('#product-search-list').hide();
+            return;
+        }
+        const matches = products.filter(p => p.name.toLowerCase().includes(query));
+        if (matches.length === 0) {
+            $('#product-search-list').hide();
+            return;
+        }
+        let html = '';
+        matches.forEach(p => {
+            html += `<button type="button" class="list-group-item list-group-item-action" data-id="${p.id}" data-name="${p.name}" data-price="${p.price}">${p.name} <span class='text-muted'>(৳${p.price})</span></button>`;
+        });
+        $('#product-search-list').html(html).show();
+    });
+
+    // Select product from dropdown
+    $('#product-search-list').on('click', 'button', function() {
+        const id = $(this).data('id');
+        const name = $(this).data('name');
+        const price = $(this).data('price');
+        const qty = parseInt($('#input-quantity').val()) || 1;
+        const subtotal = (qty * price).toFixed(2);
+        // Add row to table with hidden fields
+        const row = `<tr data-product-id="${id}">
+            <td>
+                <input type="hidden" name="product_id[]" value="${id}">
+                <input type="hidden" name="quantity[]" value="${qty}">
+                <input type="hidden" name="unit_price[]" value="${price}">
+                ${name}
+            </td>
+            <td>${qty}</td>
+            <td>৳${price.toFixed(2)}</td>
+            <td class="row-subtotal">${subtotal}</td>
+            <td><button type="button" class="btn btn-sm btn-danger remove-row"><i class="fas fa-trash"></i></button></td>
+        </tr>`;
+        $('#added-products-table tbody').append(row);
+        // Optionally update total
+        let total = 0;
+        $('#added-products-table tbody tr').each(function() {
+            total += parseFloat($(this).find('.row-subtotal').text()) || 0;
+        });
+        $('#total').val(total.toFixed(2));
+        // Clear input fields
+        $('#product-search').val('');
+        $('#product-id').val('');
+        $('#input-unit-price').val('');
+        $('#input-subtotal').val('');
+        $('#product-search-list').hide();
+        $('#input-quantity').val('1');
+    });
+    });
+
+    // Hide dropdown on blur (with delay for click)
+    $('#product-search').on('blur', function() {
+        setTimeout(() => $('#product-search-list').hide(), 200);
+    });
+});
+</script>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        $('.select2').select2({ width: '100%' });
-        // Product row add/remove
-        $('#add-order-item').on('click', function() {
-            let row = $('#order-items-table tbody tr:first').clone();
-            row.find('select').val('').trigger('change');
-            row.find('input').val('');
-            $('#order-items-table tbody').append(row);
-            $('.select2-product').select2({ width: '100%' });
+if (typeof jQuery === 'undefined') {
+    alert('jQuery not loaded!');
+}
+$(document).ready(function() {
+    console.log('Order create JS loaded');
+    function updateInputSubtotal() {
+        const qty = parseFloat($('#input-quantity').val()) || 0;
+        const price = parseFloat($('#input-unit-price').val()) || 0;
+        $('#input-subtotal').val((qty * price).toFixed(2));
+    }
+    function updateOrderTotal() {
+        let total = 0;
+        $('#added-products-table tbody tr').each(function() {
+            total += parseFloat($(this).find('.row-subtotal').text()) || 0;
         });
-        // Remove row
-        $(document).on('click', '.remove-row', function() {
-            if($('#order-items-table tbody tr').length > 1) {
-                $(this).closest('tr').remove();
-                calculateTotal();
-            }
-        });
-        // Auto price fill on product select
-        $(document).on('change', '.select2-product', function() {
-            let price = $(this).find('option:selected').data('price') || 0;
-            $(this).closest('tr').find('.price-input').val(price);
-            calculateSubtotal($(this).closest('tr'));
-            calculateTotal();
-        });
-        // Calculate subtotal and total
-        $(document).on('input', '.price-input, .qty-input', function() {
-            calculateSubtotal($(this).closest('tr'));
-            calculateTotal();
-        });
-        function calculateSubtotal(row) {
-            let price = parseFloat(row.find('.price-input').val()) || 0;
-            let qty = parseInt(row.find('.qty-input').val()) || 1;
-            row.find('.subtotal-input').val((price * qty).toFixed(2));
-        }
-        function calculateTotal() {
-            let total = 0;
-            $('.subtotal-input').each(function() {
-                total += parseFloat($(this).val()) || 0;
-            });
-            $('#total').val(total.toFixed(2));
-        }
+        $('#total').val(total.toFixed(2));
+    }
+    function clearProductInputs() {
+        $('#input-product-id').val('').trigger('change');
+        $('#input-quantity').val('1');
+        $('#input-unit-price').val('');
+        $('#input-subtotal').val('');
+    }
+    $('.product-select').select2({
+        placeholder: '🔍 Search or select product',
+        allowClear: true,
+        width: '100%'
     });
+    // Update subtotal when quantity or price changes
+    $('#input-quantity, #input-unit-price').on('input', updateInputSubtotal);
+
+    // Autofill price and update subtotal when product changes
+    $('#input-product-id').on('change', function() {
+        var cost = $(this).find('option:selected').data('cost-price');
+        if (typeof cost !== 'undefined' && cost !== null && cost !== '') {
+            $('#input-unit-price').val(cost);
+        } else {
+            $('#input-unit-price').val('');
+        }
+        updateInputSubtotal();
+    });
+
+    // Also update subtotal if product is re-selected
+    $('#input-product-id').on('select2:select', function() {
+        var cost = $(this).find('option:selected').data('cost-price');
+        if (typeof cost !== 'undefined' && cost !== null && cost !== '') {
+            $('#input-unit-price').val(cost);
+        } else {
+            $('#input-unit-price').val('');
+        }
+        updateInputSubtotal();
+    });
+    $('#add-product-btn').on('click', function() {
+        console.log('Add Product button clicked');
+        const productId = $('#input-product-id').val();
+        const productText = $('#input-product-id option:selected').text();
+        const qty = parseInt($('#input-quantity').val()) || 1;
+        const price = parseFloat($('#input-unit-price').val()) || 0;
+        const subtotal = (qty * price).toFixed(2);
+        if (!productId || qty < 1 || price < 0) {
+            alert('Please select a product and enter valid quantity and price.');
+            return;
+        }
+        // Add row to table with hidden inputs for form submission
+        const row = `<tr data-product-id="${productId}">
+            <td>
+                <input type="hidden" name="product_id[]" value="${productId}">
+                <input type="hidden" name="quantity[]" value="${qty}">
+                <input type="hidden" name="unit_price[]" value="${price}">
+                ${productText}
+            </td>
+            <td>${qty}</td>
+            <td>৳${price.toFixed(2)}</td>
+            <td class="row-subtotal">${subtotal}</td>
+            <td><button type="button" class="btn btn-sm btn-danger remove-row"><i class="fas fa-trash"></i></button></td>
+        </tr>`;
+        $('#added-products-table tbody').append(row);
+        updateOrderTotal();
+        clearProductInputs();
+    });
+    $('#added-products-table').on('click', '.remove-row', function() {
+        $(this).closest('tr').remove();
+        updateOrderTotal();
+    });
+    // Initial subtotal
+    updateInputSubtotal();
+});
 </script>
-@endsection
+@endpush
+
+@push('styles')
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<style>
+    .select2-container--default .select2-selection--single {
+        height: 48px;
+        border-radius: 0.5rem;
+        border: 1.5px solid #ced4da;
+        font-size: 1.1rem;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .select2-container--default .select2-selection--single:focus,
+    .select2-container--default .select2-selection--single:hover {
+        border-color: #ffc107;
+        box-shadow: 0 0 0 2px #ffc10755;
+    }
+    .select2-container--default .select2-selection--single .select2-selection__rendered {
+        line-height: 48px;
+        color: #495057;
+    }
+    .select2-container--default .select2-selection--single .select2-selection__arrow {
+        height: 48px;
+    }
+    .select2-search--dropdown .select2-search__field {
+        border-radius: 0.5rem;
+    }
+    .select2-container {
+        z-index: 9999 !important;
+    }
+    .select2-dropdown {
+        z-index: 99999 !important;
+    }
+    .select2-results__options {
+        max-height: 300px;
+        overflow-y: auto;
+    }
+    #order-items-table th, #order-items-table td {
+        vertical-align: middle;
+        text-align: center;
+    }
+    #order-items-table th {
+        background: #ffe082;
+        color: #333;
+        font-weight: 600;
+    }
+    #order-items-table td {
+        background: #fffde7;
+    }
+    #add-product-btn {
+        height: 40px;
+        width: 100%;
+        font-size: 1.1rem;
+        border-radius: 0.5rem;
+    }
+    .card-header.bg-warning {
+        background: linear-gradient(90deg, #ffe082 60%, #ffd54f 100%) !important;
+        color: #333 !important;
+    }
+    .form-group label.font-weight-bold {
+        font-size: 1.05rem;
+        color: #333;
+    }
+</style>
+@endpush

@@ -31,6 +31,22 @@
             </div>
         </div>
     </li>
+    <!-- Nav Item - Advanced Reports -->
+    <li class="nav-item">
+        <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseAdvancedReports" aria-expanded="false" aria-controls="collapseAdvancedReports">
+            <i class="fas fa-chart-pie fa-fw"></i>
+            <span>Advanced Reports</span>
+        </a>
+        <div id="collapseAdvancedReports" class="collapse" aria-labelledby="headingAdvancedReports" data-parent="#accordionSidebar">
+            <div class="bg-white py-2 collapse-inner rounded">
+                <a class="collapse-item" href="{{ route('reports.index') }}">Reports & Analytics</a>
+                <a class="collapse-item" href="{{ route('reports.sales') }}">Sales Analytics</a>
+                <a class="collapse-item" href="{{ route('reports.revenue') }}">Revenue Analytics</a>
+                <a class="collapse-item" href="{{ route('reports.top_products') }}">Top Products</a>
+                <a class="collapse-item" href="{{ route('reports.customers') }}">Customer Analytics</a>
+            </div>
+        </div>
+    </li>
     <!-- Divider -->
     <hr class="sidebar-divider">
     <!-- Users Nav Item -->
@@ -89,7 +105,22 @@
             </div>
         </div>
     </li>
+        <!-- Purchase Order Management Section -->
+    <hr class="sidebar-divider">
+    <li class="nav-item">
+        <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapsePurchaseOrder" aria-expanded="false" aria-controls="collapsePurchaseOrder">
+            <i class="fas fa-file-invoice fa-fw"></i>
+            <span>Purchase Order</span>
+        </a>
+        <div id="collapsePurchaseOrder" class="collapse" aria-labelledby="headingPurchaseOrder" data-parent="#accordionSidebar">
+            <div class="bg-white py-2 collapse-inner rounded">
+                <a class="collapse-item" href="{{ route('purchase_orders.index') }}">Purchase Orders</a>
+                <!-- Future: Add more PO-related links here -->
+            </div>
+        </div>
     </li>
+    
+ </li>
     <!-- Accounts Section -->
     <hr class="sidebar-divider">
     <div class="sidebar-heading">Accounts</div>

@@ -74,6 +74,20 @@ class OrderController extends Controller
         ]);
         $order = Order::create($validated);
 
+        // Store order items
+        $products = $request->input('products', []);
+        $prices = $request->input('prices', []);
+        $quantities = $request->input('quantities', []);
+        foreach ($products as $idx => $productId) {
+            \App\Models\OrderItem::create([
+                'order_id' => $order->id,
+                'product_id' => $productId,
+                'product_name' => \App\Models\Product::find($productId)?->name ?? '',
+                'price' => $prices[$idx] ?? 0,
+                'quantity' => $quantities[$idx] ?? 1,
+            ]);
+        }
+
         // Coupon validation logic
         if ($request->filled('coupon_code')) {
             $coupon = \App\Models\Coupon::where('code', $request->coupon_code)->where('active', true)->first();

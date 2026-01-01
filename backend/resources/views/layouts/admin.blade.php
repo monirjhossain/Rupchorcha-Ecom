@@ -98,7 +98,7 @@
     <script src="{{ asset('adminpanel/js/sb-admin-2.min.js') }}"></script>
     <!-- Toastr JS -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
-    @yield('scripts')
+    @stack('scripts')
     <script>
         @if(session('success'))
             toastr.success("{{ session('success') }}");
