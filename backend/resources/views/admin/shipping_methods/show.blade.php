@@ -33,7 +33,17 @@
                         @forelse($shippingMethod->conditions as $condition)
                         <tr>
                             <td><span class="badge badge-info text-uppercase">{{ $condition->condition_type }}</span></td>
-                            <td>{{ $condition->condition_value }}</td>
+                            <td>
+                                @if($condition->condition_type === 'brand')
+                                    {{ \App\Models\Brand::find($condition->condition_value)?->name ?? $condition->condition_value }}
+                                @elseif($condition->condition_type === 'product')
+                                    {{ \App\Models\Product::find($condition->condition_value)?->name ?? $condition->condition_value }}
+                                @elseif($condition->condition_type === 'category')
+                                    {{ \App\Models\Category::find($condition->condition_value)?->name ?? $condition->condition_value }}
+                                @else
+                                    {{ $condition->condition_value }}
+                                @endif
+                            </td>
                         </tr>
                         @empty
                         <tr>

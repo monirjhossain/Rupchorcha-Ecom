@@ -1,4 +1,6 @@
 <?php
+
+use App\Http\Controllers\AddressController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\PaymentSummaryController;
@@ -14,18 +16,32 @@ use App\Http\Controllers\TagController;
 use App\Http\Controllers\ProductImageController;
 use App\Http\Controllers\ProductDownloadController;
 use App\Http\Controllers\CouponController;
+use App\Http\Controllers\CourierController;
+use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\DiscountConditionController;
 use App\Http\Controllers\DiscountController;
+use App\Http\Controllers\InventoryController;
 use App\Http\Controllers\PurchaseOrderController;
 use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\UserActivityLogController;
 use App\Http\Controllers\WarehouseController;
 use App\Http\Controllers\ShippingMethodController;
 use App\Http\Controllers\ShippingZoneController;
+use App\Http\Controllers\StockMovementController;
 
 Route::post('/admin/products/export', [ProductController::class, 'export'])->name('products.export');
 // Inventory management UI
 Route::middleware(['auth', 'role:admin,super_admin'])->group(function () {
-    Route::get('/admin/inventory', [\App\Http\Controllers\InventoryController::class, 'index'])->name('inventory.index');
+    Route::get('/admin/inventory', [InventoryController::class, 'index'])->name('inventory.index');
+});
+
+// Customer Address Book (admin)
+Route::middleware(['auth', 'role:admin,super_admin'])->group(function () {
+    Route::resource('/admin/addresses', AddressController::class)->names('addresses');
+    Route::get('/admin/addresses-export', [AddressController::class, 'export'])->name('addresses.export');
+    Route::post('/admin/addresses/bulk-sms', [AddressController::class, 'bulk_sms'])->name('addresses.bulk_sms');
+    // AJAX endpoint for address dropdown
+    Route::get('/admin/addresses/ajax/by-user', [AddressController::class, 'ajaxByUser'])->name('addresses.ajax.byUser');
 });
 
 // Report routes
@@ -57,7 +73,7 @@ Route::get('/admin/payments/summary', [PaymentSummaryController::class, 'index']
 Route::post('/admin/users/{id}/toggle', [UserController::class, 'toggleActive'])->name('users.toggle');
 Route::post('/admin/users/{id}/message', [UserController::class, 'sendMessage'])->name('users.message');
 Route::get('/admin/users/bulk-message', [UserController::class, 'bulkMessageForm'])->name('users.bulk_message_form');
-Route::post('/admin/users/bulk-message', [UserController::class, 'sendBulkMessage'])->name('users.bulk_message');
+Route::post('/admin/users/bulk-sms', [UserController::class, 'bulk_sms'])->name('users.bulk_sms');
 
 // Supplier, Warehouse, and Purchase Order admin routes
 Route::middleware(['auth', 'role:admin,super_admin'])->group(function () {
@@ -100,10 +116,12 @@ Route::middleware(['auth', 'role:admin,super_admin'])->group(function () {
     Route::post('/admin/products/bulk-import', [ProductController::class, 'bulkImport'])->name('products.bulkImport');
     Route::get('/admin/products/bulk-import-sample', [ProductController::class, 'bulkImportSample'])->name('products.bulkImportSample');
     // Stock movement routes
-    Route::get('/admin/products/{product}/stock-movement', [\App\Http\Controllers\StockMovementController::class, 'create'])->name('products.stock_movement.create');
-    Route::post('/admin/products/{product}/stock-movement', [\App\Http\Controllers\StockMovementController::class, 'store'])->name('products.stock_movement.store');
+    Route::get('/admin/products/{product}/stock-movement', [StockMovementController::class, 'create'])->name('products.stock_movement.create');
+    Route::post('/admin/products/{product}/stock-movement', [StockMovementController::class, 'store'])->name('products.stock_movement.store');
 
     Route::resource('/admin/orders', OrderController::class);
+        Route::get('/admin/orders/bulk-assign-courier', [OrderController::class, 'bulkAssignCourierForm'])->name('orders.bulkAssignCourierForm');
+        Route::post('/admin/orders/bulk-assign-courier', [OrderController::class, 'bulkAssignCourier'])->name('orders.bulkAssignCourier');
     Route::resource('/admin/products', ProductController::class);
     Route::resource('/admin/categories', CategoryController::class);
     Route::resource('/admin/brands', BrandController::class);
@@ -130,27 +148,37 @@ Route::middleware(['auth', 'role:admin,super_admin'])->group(function () {
 Route::middleware(['auth', 'role:admin,super_admin'])->group(function () {
     Route::resource('/admin/shipping-methods', ShippingMethodController::class);
     Route::resource('/admin/shipping-zones', ShippingZoneController::class);
+    Route::resource('/admin/payment-gateways', \App\Http\Controllers\PaymentGatewayController::class)->names('payment-gateways');
+    Route::resource('/admin/transactions', \App\Http\Controllers\TransactionController::class)->names('transactions');
+    Route::resource('/admin/refunds', \App\Http\Controllers\RefundController::class)->names('refunds');
 });
 
 // Shipping: Add method to zone
-Route::post('/admin/shipping-zones/{zone}/methods', [
-    App\Http\Controllers\ShippingZoneController::class,
-    'storeMethod'
-])->name('shipping-zones.methods.store');
+Route::post('/admin/shipping-zones/{zone}/methods', [ShippingZoneController::class,'storeMethod'])->name('shipping-zones.methods.store');
 
 // Shipping Method Conditions
-Route::get('/admin/shipping-methods/{method}/conditions', [
-    App\Http\Controllers\ShippingMethodController::class,
-    'conditions'
-])->name('shipping-methods.conditions');
-Route::post('/admin/shipping-methods/{method}/conditions', [
-    App\Http\Controllers\ShippingMethodController::class,
-    'storeCondition'
-])->name('shipping-methods.conditions.store');
-Route::delete('/admin/shipping-methods/{method}/conditions/{condition}', [
-    App\Http\Controllers\ShippingMethodController::class,
-    'destroyCondition'
-])->name('shipping-methods.conditions.destroy');
+Route::get('/admin/shipping-methods/{method}/conditions',[ShippingMethodController::class,'conditions'])->name('shipping-methods.conditions');
+Route::post('/admin/shipping-methods/{method}/conditions', [ShippingMethodController::class,'storeCondition'])->name('shipping-methods.conditions.store');
+Route::delete('/admin/shipping-methods/{method}/conditions/{condition}', [ShippingMethodController::class,'destroyCondition'])->name('shipping-methods.conditions.destroy');
+// Discount Management Dashboard
+Route::get('/admin/discounts/dashboard', function() {
+    return view('admin.discounts.dashboard');
+})->name('discounts.dashboard');
+
+// Discount Condition Management
+Route::middleware(['auth', 'role:admin,super_admin'])->group(function () {
+    Route::get('/admin/discount-conditions', [DiscountConditionController::class, 'index'])->name('discount-conditions.index');
+    Route::get('/admin/discount-conditions/create', [DiscountConditionController::class, 'create'])->name('discount-conditions.create');
+    Route::post('/admin/discount-conditions', [DiscountConditionController::class, 'store'])->name('discount-conditions.store');
+    Route::get('/admin/discount-conditions/{id}/edit', [DiscountConditionController::class, 'edit'])->name('discount-conditions.edit');
+    Route::put('/admin/discount-conditions/{id}', [DiscountConditionController::class, 'update'])->name('discount-conditions.update');
+    Route::delete('/admin/discount-conditions/{id}', [DiscountConditionController::class, 'destroy'])->name('discount-conditions.destroy');
+});
+
+// Courier management routes
+Route::middleware(['auth', 'role:admin,super_admin'])->group(function () {
+    Route::resource('/admin/couriers', CourierController::class)->names('couriers');
+});
 
 /*
 |--------------------------------------------------------------------------
@@ -163,8 +191,12 @@ Route::delete('/admin/shipping-methods/{method}/conditions/{condition}', [
 |
 */
 
+// Redirect root URL to login if not authenticated
 Route::get('/', function () {
-    return view('welcome');
+    if (!auth()->check()) {
+        return redirect()->route('login');
+    }
+    return redirect('/admin/dashboard'); // Or your desired dashboard/home route
 });
 
-Route::get('/admin', [\App\Http\Controllers\DashboardController::class, 'index'])->name('admin.dashboard');
+Route::get('/admin', [DashboardController::class, 'index'])->name('admin.dashboard');

@@ -27,6 +27,13 @@
                 <div class="card mb-4 shadow-sm">
                     <div class="card-header bg-info text-white"><i class="fas fa-shipping-fast mr-2"></i> Shipping Address</div>
                     <div class="card-body">
+                        <div class="form-group">
+                            <label for="shipping_address_select">Select Saved Shipping Address</label>
+                            <select id="shipping_address_select" class="form-control">
+                                <option value="">-- Select address --</option>
+                            </select>
+                            <small class="form-text text-muted">Or fill in manually below.</small>
+                        </div>
                         <div class="form-row">
                             <div class="form-group col-md-6">
                                 <label>First name</label>
@@ -64,24 +71,11 @@
                         <div class="form-row">
                             <div class="form-group col-md-6">
                                 <label>Country / Region</label>
-                                <select name="shipping_country" class="form-control">
-                                    <option value="Bangladesh">Bangladesh</option>
-                                    <!-- Add more countries as needed -->
-                                </select>
+                                <input type="text" name="shipping_country" class="form-control">
                             </div>
                             <div class="form-group col-md-6">
                                 <label>State / County</label>
-                                <select name="shipping_state" class="form-control">
-                                    <option value="">Select an option...</option>
-                                    <option value="Dhaka">Dhaka</option>
-                                    <option value="Chattogram">Chattogram</option>
-                                    <option value="Khulna">Khulna</option>
-                                    <option value="Rajshahi">Rajshahi</option>
-                                    <option value="Barisal">Barisal</option>
-                                    <option value="Sylhet">Sylhet</option>
-                                    <option value="Rangpur">Rangpur</option>
-                                    <option value="Mymensingh">Mymensingh</option>
-                                </select>
+                                <input type="text" name="shipping_state" class="form-control">
                             </div>
                         </div>
                         <div class="form-row">
@@ -100,6 +94,13 @@
                 <div class="card mb-4 shadow-sm">
                     <div class="card-header bg-secondary text-white"><i class="fas fa-file-invoice mr-2"></i> Billing Address</div>
                     <div class="card-body">
+                        <div class="form-group">
+                            <label for="billing_address_select">Select Saved Billing Address</label>
+                            <select id="billing_address_select" class="form-control">
+                                <option value="">-- Select address --</option>
+                            </select>
+                            <small class="form-text text-muted">Or fill in manually below.</small>
+                        </div>
                         <div class="form-row">
                             <div class="form-group col-md-6">
                                 <label>First name</label>
@@ -137,24 +138,11 @@
                         <div class="form-row">
                             <div class="form-group col-md-6">
                                 <label>Country / Region</label>
-                                <select name="billing_country" class="form-control">
-                                    <option value="Bangladesh">Bangladesh</option>
-                                    <!-- Add more countries as needed -->
-                                </select>
+                                <input type="text" name="billing_country" class="form-control">
                             </div>
                             <div class="form-group col-md-6">
                                 <label>State / County</label>
-                                <select name="billing_state" class="form-control">
-                                    <option value="">Select an option...</option>
-                                    <option value="Dhaka">Dhaka</option>
-                                    <option value="Chattogram">Chattogram</option>
-                                    <option value="Khulna">Khulna</option>
-                                    <option value="Rajshahi">Rajshahi</option>
-                                    <option value="Barisal">Barisal</option>
-                                    <option value="Sylhet">Sylhet</option>
-                                    <option value="Rangpur">Rangpur</option>
-                                    <option value="Mymensingh">Mymensingh</option>
-                                </select>
+                                <input type="text" name="billing_state" class="form-control">
                             </div>
                         </div>
                         <div class="form-row">
@@ -194,6 +182,21 @@
                             <select name="payment_status" id="payment_status" class="form-control" required>
                                 <option value="unpaid">Unpaid</option>
                                 <option value="paid">Paid</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <!-- Courier Selection -->
+                <div class="card mb-4 shadow-sm">
+                    <div class="card-header bg-dark text-white"><i class="fas fa-truck mr-2"></i> Courier</div>
+                    <div class="card-body">
+                        <div class="form-group">
+                            <label for="courier_id">Select Courier <span class="text-danger">*</span></label>
+                            <select name="courier_id" id="courier_id" class="form-control select2" required>
+                                <option value="">Select courier</option>
+                                @foreach(App\Models\Courier::orderBy('name')->get() as $courier)
+                                    <option value="{{ $courier->id }}">{{ $courier->name }}</option>
+                                @endforeach
                             </select>
                         </div>
                     </div>
@@ -471,6 +474,78 @@ $(document).ready(function() {
 
     // Initial total
     updateTotalWithCoupon();
+});
+</script>
+@endpush
+
+@push('scripts')
+<script>
+$(document).ready(function() {
+    function fetchAddresses(userId, type, selectId) {
+        if (!userId || userId == 0) {
+            $(selectId).html('<option value="">-- Select address --</option>');
+            return;
+        }
+        $.ajax({
+            url: "{{ route('addresses.ajax.byUser') }}",
+            data: { user_id: userId },
+            success: function(addresses) {
+                let options = '<option value="">-- Select address --</option>';
+                addresses.forEach(function(addr) {
+                    if (!type || addr.type === type) {
+                        options += `<option value="${addr.id}" data-address='${JSON.stringify(addr)}'>${addr.address_line1}, ${addr.city}, ${addr.country}</option>`;
+                    }
+                });
+                $(selectId).html(options);
+            }
+        });
+    }
+
+    $('#user_id').on('change', function() {
+        let userId = $(this).val();
+        fetchAddresses(userId, 'shipping', '#shipping_address_select');
+        fetchAddresses(userId, 'billing', '#billing_address_select');
+    });
+
+    $('#shipping_address_select').on('change', function() {
+        let selected = $(this).find('option:selected').data('address');
+        if (selected) {
+            $('input[name="shipping_first_name"]').val(selected.name || '');
+            $('input[name="shipping_last_name"]').val('');
+            $('input[name="shipping_company"]').val('');
+            $('input[name="shipping_address_1"]').val(selected.address_line1 || '');
+            $('input[name="shipping_address_2"]').val(selected.address_line2 || '');
+            $('input[name="shipping_city"]').val(selected.city || '');
+            $('input[name="shipping_postcode"]').val(selected.postal_code || '');
+            $('input[name="shipping_country"]').val(selected.country || '');
+            $('input[name="shipping_state"]').val(selected.state || '');
+            $('input[name="shipping_email"]').val(selected.email || '');
+            $('input[name="shipping_phone"]').val(selected.phone || '');
+        }
+    });
+    $('#billing_address_select').on('change', function() {
+        let selected = $(this).find('option:selected').data('address');
+        if (selected) {
+            $('input[name="billing_first_name"]').val(selected.name || '');
+            $('input[name="billing_last_name"]').val('');
+            $('input[name="billing_company"]').val('');
+            $('input[name="billing_address_1"]').val(selected.address_line1 || '');
+            $('input[name="billing_address_2"]').val(selected.address_line2 || '');
+            $('input[name="billing_city"]').val(selected.city || '');
+            $('input[name="billing_postcode"]').val(selected.postal_code || '');
+            $('input[name="billing_country"]').val(selected.country || '');
+            $('input[name="billing_state"]').val(selected.state || '');
+            $('input[name="billing_email"]').val(selected.email || '');
+            $('input[name="billing_phone"]').val(selected.phone || '');
+        }
+    });
+
+    // On page load, if a customer is pre-selected, trigger address fetch
+    let initialUserId = $('#user_id').val();
+    if (initialUserId && initialUserId != 0) {
+        fetchAddresses(initialUserId, 'shipping', '#shipping_address_select');
+        fetchAddresses(initialUserId, 'billing', '#billing_address_select');
+    }
 });
 </script>
 @endpush

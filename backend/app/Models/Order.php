@@ -40,4 +40,9 @@ class Order extends Model
     {
         return $this->belongsTo(User::class);
     }
+
+        public function courier()
+        {
+            return $this->belongsTo(Courier::class);
+        }
 }

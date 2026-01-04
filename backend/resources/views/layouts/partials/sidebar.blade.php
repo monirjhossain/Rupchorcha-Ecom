@@ -1,3 +1,4 @@
+    <!-- Customers Book Section moved under Order Management -->
 <!-- Sidebar -->
 <ul class="navbar-nav bg-gradient-primary sidebar sidebar-dark accordion sidebar-sticky" id="accordionSidebar">
     <!-- Sidebar - Brand -->
@@ -101,7 +102,6 @@
             <div class="bg-white py-2 collapse-inner rounded">
                 <a class="collapse-item" href="{{ route('shipping-zones.index') }}">Shipping Zones</a>
                 <a class="collapse-item" href="{{ route('shipping-methods.index') }}">Shipping Methods</a>
-                <a class="collapse-item" href="{{ route('shipping-methods.conditions', 1) }}">Shipping Conditions</a>
             </div>
         </div>
     </li>
@@ -119,6 +119,11 @@
                 <a class="collapse-item" href="{{ route('coupons.index') }}">Coupon</a>
                 <a class="collapse-item" href="{{ route('discounts.index') }}">Discount</a>
                 <a class="collapse-item" href="{{ url('/admin/shipping-methods') }}">Shipping Methods</a>
+                <a class="collapse-item" href="{{ route('shipping-methods.index') }}">Product Discount</a>
+                <a class="collapse-item" href="{{ route('couriers.index') }}">Courier Management</a>
+                <a class="collapse-item" href="{{ route('orders.bulkAssignCourierForm') }}">Bulk Courier Assign</a>
+                <a class="collapse-item" href="{{ route('refunds.index') }}">Refund Policy</a>
+                <a class="collapse-item" href="{{ route('addresses.index') }}">Customer Addresses</a>
                 <!-- Future: Add more order-related links here -->
             </div>
         </div>
@@ -137,16 +142,28 @@
             </div>
         </div>
     </li>
-    
- </li>
-    <!-- Accounts Section -->
+    <!-- Discount Management Section -->
     <hr class="sidebar-divider">
-    <div class="sidebar-heading">Accounts</div>
     <li class="nav-item">
-        <a class="nav-link" href="{{ route('payments.summary') }}">
-            <i class="fas fa-wallet fa-fw"></i>
-            <span>Payment Summary</span>
+        <a class="nav-link" href="{{ route('discount-conditions.index') }}">
+            <i class="fas fa-percent fa-fw"></i>
+            <span>Advance Discount</span>
         </a>
+    </li>
+    <!-- Payment Section -->
+    <hr class="sidebar-divider">
+    <li class="nav-item">
+        <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapsePayment" aria-expanded="false" aria-controls="collapsePayment">
+            <i class="fas fa-money-check-alt fa-fw"></i>
+            <span>Payment</span>
+        </a>
+        <div id="collapsePayment" class="collapse" aria-labelledby="headingPayment" data-parent="#accordionSidebar">
+            <div class="bg-white py-2 collapse-inner rounded">
+                <a class="collapse-item" href="{{ route('payments.summary') }}">Payment Summary</a>
+                <a class="collapse-item" href="{{ route('payment-gateways.index') }}">Payment Gateways</a>
+                <a class="collapse-item" href="{{ route('transactions.index') }}">Transactions</a>
+            </div>
+        </div>
     </li>
     <!-- More sidebar items can be added here -->
 </ul>

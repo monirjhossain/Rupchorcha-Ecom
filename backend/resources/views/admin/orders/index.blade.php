@@ -114,6 +114,8 @@
                             <th>Total</th>
                             <th>Payment</th>
                             <th>Created At</th>
+                                <th>Courier</th>
+                                <th>Tracking</th>
                             <th>Action</th>
                         </tr>
                     </thead>
@@ -126,6 +128,16 @@
                             <td>৳ {{ number_format($order->total, 2) }}</td>
                             <td><span class="badge badge-{{ $order->payment_status == 'paid' ? 'success' : 'secondary' }}">{{ ucfirst($order->payment_status) }}</span></td>
                             <td>{{ $order->created_at->format('Y-m-d H:i') }}</td>
+                                <td>
+                                    {{ $order->courier ? $order->courier->name : 'N/A' }}
+                                </td>
+                                <td>
+                                    @if($order->courier && $order->courier->tracking_url && $order->tracking_number)
+                                        <a href="{{ str_replace('{tracking_number}', $order->tracking_number, $order->courier->tracking_url) }}" target="_blank">Track</a>
+                                    @else
+                                        N/A
+                                    @endif
+                                </td>
                             <td>
                                 <a href="{{ route('orders.show', $order->id) }}" class="btn btn-info btn-sm"><i class="fas fa-eye"></i></a>
                                 <a href="{{ route('orders.edit', $order->id) }}" class="btn btn-primary btn-sm"><i class="fas fa-edit"></i></a>
@@ -134,6 +146,13 @@
                                     @method('DELETE')
                                     <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Delete this order?')"><i class="fas fa-trash"></i></button>
                                 </form>
+                                <form action="{{ route('orders.update', $order->id) }}" method="POST" style="display:inline-block;">
+                                    @csrf
+                                    @method('PUT')
+                                    <input type="hidden" name="send_to_courier" value="1">
+                                    <button type="submit" class="btn btn-warning btn-sm" onclick="return confirm('Send this order to courier?')">Send to Courier</button>
+                                </form>
+                                <a href="{{ route('refunds.create') }}?order_id={{ $order->id }}" class="btn btn-secondary btn-sm">Refund/Return/Exchange</a>
                             </td>
                         </tr>
                         @empty

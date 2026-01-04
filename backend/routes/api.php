@@ -17,3 +17,8 @@ use Illuminate\Support\Facades\Route;
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
+
+// Payment Gateway APIs
+Route::get('/payment/gateways', [\App\Http\Controllers\PaymentController::class, 'gateways']);
+Route::post('/payment/initiate', [\App\Http\Controllers\PaymentController::class, 'initiate'])->middleware('auth:sanctum');
+Route::post('/payment/callback/{gateway}', [\App\Http\Controllers\PaymentController::class, 'callback']);

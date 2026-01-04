@@ -8,6 +8,29 @@ use Illuminate\Http\Request;
 class OrderController extends Controller
 {
     /**
+     * Show bulk assign courier form.
+     */
+    public function bulkAssignCourierForm()
+    {
+        $orders = \App\Models\Order::whereNull('courier_id')->with('user')->get();
+        $couriers = \App\Models\Courier::all();
+        return view('admin.orders.bulk_assign', compact('orders', 'couriers'));
+    }
+
+    /**
+     * Handle bulk courier assignment.
+     */
+    public function bulkAssignCourier(Request $request)
+    {
+        $request->validate([
+            'courier_id' => 'required|exists:couriers,id',
+            'order_ids' => 'required|array',
+            'order_ids.*' => 'exists:orders,id',
+        ]);
+        \App\Models\Order::whereIn('id', $request->order_ids)->update(['courier_id' => $request->courier_id]);
+        return redirect()->route('orders.index')->with('success', 'Courier assigned to selected orders.');
+    }
+    /**
      * Display a listing of the orders.
      */
     public function index()
@@ -141,17 +164,28 @@ class OrderController extends Controller
      */
     public function update(Request $request, Order $order)
     {
-        $validated = $request->validate([
-            'user_id' => 'nullable|exists:users,id',
-            'shipping_address_id' => 'nullable|exists:addresses,id',
-            'billing_address_id' => 'nullable|exists:addresses,id',
-            'status' => 'required|string',
-            'total' => 'required|numeric',
-            'payment_status' => 'required|string',
-        ]);
-        $order->update($validated);
-        // Optionally handle order items, payments, etc. here
-        return redirect()->route('orders.index')->with('success', 'Order updated successfully.');
+            $validated = $request->validate([
+                'status' => 'required|string',
+                'payment_status' => 'required|string',
+                'payment_method' => 'nullable|string',
+                'courier_id' => 'nullable|exists:couriers,id',
+            ]);
+
+            // If send_to_courier is set, assign a courier (first available if not set)
+            if ($request->has('send_to_courier')) {
+                $courier = $order->courier_id ? $order->courier_id : \App\Models\Courier::first()?->id;
+                if ($courier) {
+                    $order->courier_id = $courier;
+                }
+            } elseif ($request->filled('courier_id')) {
+                $order->courier_id = $request->courier_id;
+            }
+
+            $order->status = $validated['status'];
+            $order->payment_status = $validated['payment_status'];
+            $order->payment_method = $validated['payment_method'] ?? $order->payment_method;
+            $order->save();
+            return redirect()->route('orders.index')->with('success', 'Order updated successfully.');
     }
 
     /**

@@ -5,55 +5,68 @@
     <h1 class="h3 mb-0 text-gray-800">Users</h1>
     <div>
         <a href="{{ url('/admin/users/create') }}" class="btn btn-primary">+ Create User</a>
-        <button type="button" class="btn btn-success ml-2" data-toggle="modal" data-target="#bulkMessageModal">Bulk Message</button>
     </div>
 </div>
-<!-- Bulk Message Modal -->
-<div class="modal fade" id="bulkMessageModal" tabindex="-1" role="dialog" aria-labelledby="bulkMessageModalLabel" aria-hidden="true">
-    <div class="modal-dialog" role="document">
-        <div class="modal-content">
-            <form method="POST" action="{{ route('users.bulk_message') }}">
-                @csrf
-                <div class="modal-header">
-                    <h5 class="modal-title" id="bulkMessageModalLabel">Send Bulk Message</h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                </div>
-                <div class="modal-body">
-                    <div class="form-group">
-                        <label for="bulk_users">Select Users</label>
-                        <select name="user_ids[]" id="bulk_users" class="form-control" multiple required>
-                            <option value="all">All Users</option>
-                            @foreach($users as $user)
-                                <option value="{{ $user->id }}">{{ $user->name }} ({{ $user->email }})</option>
-                            @endforeach
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="bulk_message_type">Type</label>
-                        <select name="message_type" id="bulk_message_type" class="form-control" required onchange="document.getElementById('smsApiKeyGroup').style.display = this.value === 'sms' ? 'block' : 'none';">
-                            <option value="email">Email</option>
-                            <option value="sms">SMS</option>
-                        </select>
-                    </div>
-                    <div class="form-group" id="smsApiKeyGroup" style="display:none;">
-                        <label for="sms_api_key">SMS API Key</label>
-                        <input type="text" name="sms_api_key" id="sms_api_key" class="form-control" placeholder="Enter SMS API Key">
-                    </div>
-                    <div class="form-group">
-                        <label for="bulk_message">Message</label>
-                        <textarea name="message" id="bulk_message" class="form-control" rows="3" required></textarea>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                    <button type="submit" class="btn btn-success">Send</button>
-                </div>
-            </form>
+<!-- Bulk SMS Section -->
+<form method="POST" action="{{ route('users.bulk_sms') }}">
+    @csrf
+    <div class="card mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <span class="font-weight-bold">Bulk SMS</span>
+            <button type="submit" class="btn btn-info">Send SMS</button>
+        </div>
+        <div class="card-body">
+            <div class="form-group">
+                <label for="sms_api_key">SMS API Key</label>
+                <input type="text" name="sms_api_key" id="sms_api_key" class="form-control" placeholder="Enter SMS API Key" required>
+            </div>
+            <div class="form-group">
+                <label for="sms_message">Message</label>
+                <textarea name="sms_message" id="sms_message" class="form-control" rows="3" required></textarea>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-bordered" width="100%" cellspacing="0">
+                    <thead>
+                        <tr>
+                            <th><input type="checkbox" id="select_all_users"></th>
+                            <th>ID</th>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Role</th>
+                            <th>Phone</th>
+                            <th>Address</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($users as $user)
+                            <tr>
+                                <td><input type="checkbox" name="user_ids[]" value="{{ $user->id }}" class="user-checkbox"></td>
+                                <td>{{ $user->id }}</td>
+                                <td>{{ $user->name }}</td>
+                                <td>{{ $user->email }}</td>
+                                <td>{{ $user->role }}</td>
+                                <td>{{ $user->phone }}</td>
+                                <td>{{ $user->address }}</td>
+                                <td>{{ $user->active ? 'Active' : 'Inactive' }}</td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
-</div>
+</form>
+@push('scripts')
+<script>
+    document.getElementById('select_all_users').addEventListener('change', function() {
+        let checked = this.checked;
+        document.querySelectorAll('.user-checkbox').forEach(function(cb) {
+            cb.checked = checked;
+        });
+    });
+</script>
+@endpush
 <!-- User Search & Filter -->
 <form method="GET" action="" class="mb-4">
     <div class="row align-items-end">
