@@ -6,7 +6,8 @@ use App\Models\Payment;
 use Illuminate\Http\Request;
 
 class PaymentController extends Controller
-    // List all payment gateways
+{
+     // List all payment gateways
     public function gateways()
     {
         return response()->json(\App\Models\PaymentGateway::where('is_active', true)->get());
@@ -47,7 +48,6 @@ class PaymentController extends Controller
         // Implementation will depend on the gateway
         return response()->json(['message' => 'Callback received for ' . $gateway]);
     }
-{
     /**
      * Display a listing of the resource.
      */
@@ -104,3 +104,4 @@ class PaymentController extends Controller
         //
     }
 }
+   

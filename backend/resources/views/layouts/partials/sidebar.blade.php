@@ -1,4 +1,3 @@
-    <!-- Customers Book Section moved under Order Management -->
 <!-- Sidebar -->
 <ul class="navbar-nav bg-gradient-primary sidebar sidebar-dark accordion sidebar-sticky" id="accordionSidebar">
     <!-- Sidebar - Brand -->
@@ -50,6 +49,19 @@
     </li>
     <!-- Divider -->
     <hr class="sidebar-divider">
+    <!-- Reviews Nav Item -->
+    <li class="nav-item">
+        <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseReviews" aria-expanded="false" aria-controls="collapseReviews">
+            <i class="fas fa-star fa-fw"></i>
+            <span>Reviews</span>
+        </a>
+        <div id="collapseReviews" class="collapse" aria-labelledby="headingReviews" data-parent="#accordionSidebar">
+            <div class="bg-white py-2 collapse-inner rounded">
+                <a class="collapse-item" href="{{ route('reviews.index') }}">Products Reviews</a>
+                
+            </div>
+        </div>
+    </li>
     <!-- Users Nav Item -->
     <li class="nav-item">
         <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseUsers" aria-expanded="false" aria-controls="collapseUsers">
@@ -60,7 +72,6 @@
             <div class="bg-white py-2 collapse-inner rounded">
                 <a class="collapse-item" href="/admin/users">User List</a>
                 <a class="collapse-item" href="{{ route('users.activity_logs') }}">User Activity Log</a>
-                <a class="collapse-item" href="{{ route('users.bulk_message_form') }}">Bulk Message</a>
 
             </div>
         </div>
@@ -142,6 +153,23 @@
             </div>
         </div>
     </li>
+    <!-- Marketing Section -->
+    <hr class="sidebar-divider">
+    <div class="sidebar-heading">Marketing</div>
+    <li class="nav-item">
+        <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseMarketing" aria-expanded="false" aria-controls="collapseMarketing">
+            <i class="fas fa-bullhorn fa-fw"></i>
+            <span>Marketing</span>
+        </a>
+        <div id="collapseMarketing" class="collapse" aria-labelledby="headingMarketing" data-parent="#accordionSidebar">
+            <div class="bg-white py-2 collapse-inner rounded">
+                <a class="collapse-item" href="{{ route('bulk_email.index') }}">Bulk Email</a>
+                <a class="collapse-item" href="{{ route('users.index') }}#bulk-sms">Bulk SMS</a>
+                <a class="collapse-item" href="{{ route('campaign_history.index') }}">Campaign History</a>
+            </div>
+        </div>
+    </li>
+    <!-- Customers Book Section moved under Order Management -->
     <!-- Discount Management Section -->
     <hr class="sidebar-divider">
     <li class="nav-item">

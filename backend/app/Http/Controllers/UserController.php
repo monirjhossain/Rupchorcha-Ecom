@@ -43,9 +43,10 @@ class UserController extends Controller
             'message' => 'required|string',
         ]);
         if ($request->message_type === 'email') {
-            \Mail::raw($request->message, function($mail) use ($user) {
+            \Mail::send([], [], function($mail) use ($user, $request) {
                 $mail->to($user->email)
-                    ->subject('Message from Admin');
+                    ->subject('Message from Admin')
+                    ->setBody($request->message, 'text/html');
             });
             return back()->with('success', 'Email sent successfully!');
         } elseif ($request->message_type === 'sms') {

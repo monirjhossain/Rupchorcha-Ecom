@@ -1,3 +1,4 @@
+use Barryvdh\DomPDF\Facade\Pdf;
 <?php
 
 namespace App\Http\Controllers;
@@ -164,7 +165,7 @@ class PurchaseOrderController extends Controller
      public function pdf($id)
     {
         $order = \App\Models\PurchaseOrder::with(['items.product', 'supplier'])->findOrFail($id);
-        $pdf = \PDF::loadView('admin.purchase_orders.pdf', compact('order'));
+        $pdf = Pdf::loadView('admin.purchase_orders.pdf', compact('order'));
         $filename = 'PurchaseOrder-'.$order->id.'.pdf';
         return $pdf->download($filename);
     }

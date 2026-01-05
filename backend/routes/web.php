@@ -1,11 +1,14 @@
 <?php
-
+use App\Http\Controllers\FeedbackController;
+use App\Http\Controllers\CampaignHistoryController;
+use App\Http\Controllers\ProductReviewController;
 use App\Http\Controllers\AddressController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\PaymentSummaryController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\DashboardReportController;
+use App\Http\Controllers\BulkEmailController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\CategoryController;
@@ -29,6 +32,11 @@ use App\Http\Controllers\ShippingMethodController;
 use App\Http\Controllers\ShippingZoneController;
 use App\Http\Controllers\StockMovementController;
 
+
+// Feedbacks (admin)
+
+// Feedbacks (user)
+
 Route::post('/admin/products/export', [ProductController::class, 'export'])->name('products.export');
 // Inventory management UI
 Route::middleware(['auth', 'role:admin,super_admin'])->group(function () {
@@ -43,7 +51,26 @@ Route::middleware(['auth', 'role:admin,super_admin'])->group(function () {
     // AJAX endpoint for address dropdown
     Route::get('/admin/addresses/ajax/by-user', [AddressController::class, 'ajaxByUser'])->name('addresses.ajax.byUser');
 });
+// Product Reviews (admin & API)
+Route::middleware(['auth', 'role:admin,super_admin'])->group(function () {
+    Route::get('/admin/reviews', [ProductReviewController::class, 'index'])->name('reviews.index');
+    Route::get('/admin/reviews/{review}/edit', [ProductReviewController::class, 'edit'])->name('reviews.edit');
+    Route::put('/admin/reviews/{review}', [ProductReviewController::class, 'update'])->name('reviews.update');
+    Route::post('/admin/reviews/{review}/status', [ProductReviewController::class, 'updateStatus'])->name('reviews.updateStatus');
+    Route::delete('/admin/reviews/{review}', [ProductReviewController::class, 'destroy'])->name('reviews.destroy');
+});
+// Product Reviews (customer API)
+Route::post('/reviews', [ProductReviewController::class, 'store'])->name('reviews.store');
 
+// Campaign History
+Route::middleware(['auth', 'role:admin,super_admin'])->group(function () {
+    Route::get('/admin/campaign-history', [CampaignHistoryController::class, 'index'])->name('campaign_history.index');
+});
+
+Route::middleware(['auth', 'role:admin,super_admin'])->group(function () {
+    Route::get('/admin/bulk-email', [BulkEmailController::class, 'index'])->name('bulk_email.index');
+    Route::post('/admin/bulk-email/send', [BulkEmailController::class, 'send'])->name('bulk_email.send');
+});
 // Report routes
 Route::get('/report/brand', [DashboardReportController::class, 'brandReport'])->name('report.brand');
 Route::get('/report/brand/export', [DashboardReportController::class, 'exportBrandReport'])->name('report.brand.export');
@@ -200,3 +227,4 @@ Route::get('/', function () {
 });
 
 Route::get('/admin', [DashboardController::class, 'index'])->name('admin.dashboard');
+

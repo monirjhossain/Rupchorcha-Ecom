@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Order;
+use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 
 class OrderController extends Controller
@@ -94,7 +95,25 @@ class OrderController extends Controller
             'total' => 'required|numeric',
             'payment_status' => 'required|string',
             'coupon_code' => 'nullable|string',
+            'guest_name' => 'nullable|string',
+            'guest_email' => 'nullable|email',
+            'guest_phone' => 'nullable|string',
+            'guest_address' => 'nullable|string',
         ]);
+
+        // If no user_id, create a guest user
+        if (empty($validated['user_id'])) {
+            $user = \App\Models\User::create([
+                'name' => $validated['guest_name'] ?? 'Guest',
+                'email' => $validated['guest_email'] ?? 'guest_' . uniqid() . '@example.com',
+                'phone' => $validated['guest_phone'] ?? null,
+                'address' => $validated['guest_address'] ?? null,
+                'role' => 'customer',
+                'password' => bcrypt(Str::random(10)),
+                'active' => true,
+            ]);
+            $validated['user_id'] = $user->id;
+        }
         $order = Order::create($validated);
 
         // Store order items
