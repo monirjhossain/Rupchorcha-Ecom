@@ -31,4 +31,7 @@ return [
         'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
     ],
 
+    // SMS API configuration
+    'sms_api_key' => env('SMS_API_KEY'),
+    'sms_api_url' => env('SMS_API_URL'),
 ];

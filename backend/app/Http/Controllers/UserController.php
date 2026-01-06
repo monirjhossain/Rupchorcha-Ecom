@@ -7,6 +7,153 @@ use Illuminate\Support\Facades\Auth;
 
 class UserController extends Controller
 {
+    // Send OTP to user's email or phone
+    public function sendOtp(Request $request)
+    {
+        $request->validate([
+            'email' => 'required_without:phone|email|exists:users,email',
+            'phone' => 'required_without:email|string|exists:users,phone',
+        ]);
+
+        // Find user by email or phone
+        $user = User::where('email', $request->email)
+            ->orWhere('phone', $request->phone)
+            ->first();
+        if (!$user) {
+            return response()->json(['success' => false, 'message' => 'User not found.'], 404);
+        }
+
+        // Generate OTP (6 digit)
+        $otp = rand(100000, 999999);
+        $user->otp_code = $otp;
+        $user->otp_expires_at = now()->addMinutes(5);
+        $user->save();
+
+        // Send OTP via email if email is provided
+        if ($user->email) {
+            \Mail::raw('Your OTP code is: ' . $otp, function($mail) use ($user) {
+                $mail->to($user->email)
+                    ->subject('Your OTP Code');
+            });
+        }
+
+        // Send OTP via SMS if phone is provided
+        if ($user->phone) {
+            $smsApiKey = config('services.sms_api_key'); // Set this in config/services.php
+            $smsApiUrl = config('services.sms_api_url'); // Set this in config/services.php
+            if ($smsApiKey && $smsApiUrl) {
+                $message = 'Your OTP code is: ' . $otp;
+                // Simple example using GuzzleHttp
+                try {
+                    $client = new \GuzzleHttp\Client();
+                    $client->post($smsApiUrl, [
+                        'form_params' => [
+                            'api_key' => $smsApiKey,
+                            'to' => $user->phone,
+                            'message' => $message,
+                        ]
+                    ]);
+                } catch (\Exception $e) {
+                    // Log SMS error
+                    \Log::error('SMS sending failed: ' . $e->getMessage());
+                }
+            }
+        }
+
+        return response()->json(['success' => true, 'message' => 'OTP sent to your email/SMS.']);
+    }
+
+    // Verify OTP and log in
+    public function verifyOtp(Request $request)
+    {
+        $request->validate([
+            'email' => 'required|email|exists:users,email',
+            'otp' => 'required|digits:6',
+        ]);
+
+        $user = User::where('email', $request->email)->first();
+        if (!$user || !$user->otp_code || !$user->otp_expires_at) {
+            return response()->json(['success' => false, 'message' => 'OTP not found.'], 404);
+        }
+        if ($user->otp_code != $request->otp || now()->gt($user->otp_expires_at)) {
+            return response()->json(['success' => false, 'message' => 'Invalid or expired OTP.'], 401);
+        }
+
+        // Clear OTP after successful login
+        $user->otp_code = null;
+        $user->otp_expires_at = null;
+        $user->save();
+
+        Auth::login($user);
+        return response()->json(['success' => true, 'message' => 'Login successful.', 'user' => $user]);
+    }
+            // Password reset API: set new password using token
+            public function resetPassword(Request $request)
+            {
+                $request->validate([
+                    'email' => 'required|email|exists:users,email',
+                    'token' => 'required|string',
+                    'password' => 'required|string|min:6|confirmed',
+                ]);
+
+                $status = \Password::reset(
+                    $request->only('email', 'password', 'password_confirmation', 'token'),
+                    function ($user, $password) {
+                        $user->password = \Hash::make($password);
+                        $user->save();
+                    }
+                );
+
+                if ($status === \Password::PASSWORD_RESET) {
+                    return response()->json([
+                        'success' => true,
+                        'message' => 'Password has been reset successfully.'
+                    ]);
+                } else {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Invalid token or unable to reset password.'
+                    ], 400);
+                }
+            }
+        // Forgot password API: send reset link
+        public function forgotPassword(Request $request)
+        {
+            $request->validate([
+                'email' => 'required|email|exists:users,email',
+            ]);
+
+            $status = \Password::sendResetLink(
+                $request->only('email')
+            );
+
+            if ($status === \Password::RESET_LINK_SENT) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Password reset link sent to your email.'
+                ]);
+            } else {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Unable to send reset link.'
+                ], 500);
+            }
+        }
+    // User profile API (authenticated user)
+    public function profile(Request $request)
+    {
+        $user = $request->user();
+        if (!$user) {
+            return response()->json([
+                'success' => false,
+                'message' => 'User not authenticated.'
+            ], 401);
+        }
+        return response()->json([
+            'success' => true,
+            'user' => $user
+        ]);
+    }
     // User list (admin)
     public function index()
     {
@@ -72,28 +219,46 @@ class UserController extends Controller
         return view('auth.register');
     }
 
-    // Handle registration
+    // Handle registration (API-ready, JSON response)
     public function register(Request $request)
     {
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users',
-            'password' => 'required|string|min:6|confirmed',
-            'phone' => 'nullable|string|max:20',
-            'address' => 'nullable|string|max:255',
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
+            'password' => ['required', 'string', 'min:6', 'confirmed'],
+            'phone' => ['nullable', 'string', 'max:20'],
+            'address' => ['nullable', 'string', 'max:255'],
+        ], [
+            'name.required' => 'Name is required.',
+            'email.required' => 'Email is required.',
+            'email.email' => 'Email must be valid.',
+            'email.unique' => 'Email already exists.',
+            'password.required' => 'Password is required.',
+            'password.confirmed' => 'Password confirmation does not match.',
         ]);
 
         $user = User::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'password' => Hash::make($request->password),
-            'role' => 'customer', // Always set as customer for public registration
-            'phone' => $request->phone,
-            'address' => $request->address,
+            'name' => $validated['name'],
+            'email' => $validated['email'],
+            'password' => Hash::make($validated['password']),
+            'role' => 'customer',
+            'phone' => $validated['phone'] ?? null,
+            'address' => $validated['address'] ?? null,
         ]);
 
         Auth::login($user);
-        return redirect('/admin');
+
+        // If API request, return JSON
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Registration successful.',
+                'user' => $user,
+            ], 201);
+        }
+
+        // Otherwise, redirect (web)
+        return redirect('/admin')->with('success', 'Registration successful.');
     }
      // Show customer details
     public function show($id)

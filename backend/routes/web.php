@@ -1,5 +1,6 @@
 <?php
-use App\Http\Controllers\FeedbackController;
+use App\Http\Controllers\Auth\ForgotPasswordController;
+use App\Http\Controllers\Auth\ResetPasswordController;
 use App\Http\Controllers\CampaignHistoryController;
 use App\Http\Controllers\ProductReviewController;
 use App\Http\Controllers\AddressController;
@@ -33,11 +34,13 @@ use App\Http\Controllers\ShippingZoneController;
 use App\Http\Controllers\StockMovementController;
 
 
-// Feedbacks (admin)
-
-// Feedbacks (user)
-
+// Password reset routes
+Route::get('password/reset', [ForgotPasswordController::class, 'showLinkRequestForm'])->name('password.request');
+Route::post('password/email', [ForgotPasswordController::class, 'sendResetLinkEmail'])->name('password.email');
+Route::get('password/reset/{token}', [ResetPasswordController::class, 'showResetForm'])->name('password.reset');
+Route::post('password/reset', [ResetPasswordController::class, 'reset'])->name('password.update');
 Route::post('/admin/products/export', [ProductController::class, 'export'])->name('products.export');
+
 // Inventory management UI
 Route::middleware(['auth', 'role:admin,super_admin'])->group(function () {
     Route::get('/admin/inventory', [InventoryController::class, 'index'])->name('inventory.index');
