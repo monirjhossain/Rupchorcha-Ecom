@@ -1,8 +1,7 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import Header from "./components/Header";
-import HeroSlider from "./Home/components/HeroSlider";
-import MegaDealsSection from "./Home/sections/MegaDealsSection";
+import HeroSlider from "./components/Home/HeroSlider";
 import ShopByCategorySection from "./Home/sections/ShopByCategorySection";
 import BrandOfferSection from "./Home/sections/BrandOfferSection";
 import styles from "./Home/Home.module.css";
@@ -51,7 +50,6 @@ const Home: React.FC = () => {
         <HeroSlider />
         <BrandOfferSection />
         {/* Mega Deals Section */}
-        <MegaDealsSection />
         {/* Shop By Category Section */}
         <ShopByCategorySection />
         {/* Featured Products */}

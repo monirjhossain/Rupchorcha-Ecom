@@ -63,7 +63,7 @@ export default function HeroSlider() {
           >
             <Image
               src={slide.image}
-              alt={slide.title}
+              alt={slide.title || `Slider image ${idx + 1}`}
               fill
               className={styles.slideImg}
               priority={idx === current}
@@ -97,3 +97,4 @@ export default function HeroSlider() {
     </section>
   );
 }
+

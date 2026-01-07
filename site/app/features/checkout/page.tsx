@@ -2,8 +2,8 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { cartStorage } from "../../src/utils/cartStorage";
-import "../Checkout/Checkout.css";
+import { cartStorage } from "../../utils/cartStorage";
+import "./Checkout.css";
 
 const CheckoutPage = ({ updateCartCount }: { updateCartCount?: () => void }) => {
   const router = useRouter();

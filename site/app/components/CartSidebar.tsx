@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { cartStorage } from "@/src/utils/cartStorage";
+import { cartStorage } from "@/app/utils/cartStorage";
 import styles from "./CartSidebar.module.css";
 
 interface CartSidebarProps {
@@ -76,45 +76,38 @@ const CartSidebar: React.FC<CartSidebarProps> = ({ isOpen, onClose, updateCartCo
   if (!isOpen) return null;
 
   return (
-    <aside className={styles.cartSidebar}>
-      <div className={styles.cartSidebarHeader}>
-        <h3>Shopping Cart</h3>
-        <button className={styles.closeBtn} onClick={onClose}>×</button>
+    <aside className={styles.cartSidebar} style={{position:'fixed',top:0,right:0,width:370,maxWidth:'100vw',height:'100vh',background:'#fff',boxShadow:'-4px 0 24px #0002',zIndex:9999,display:'flex',flexDirection:'column',borderLeft:'1px solid #f2f2f2',transition:'right 0.2s'}}>
+      <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'2rem 1.5rem 1.2rem 1.5rem',borderBottom:'1px solid #eee',boxShadow:'0 2px 8px #0001'}}>
+        <h2 style={{fontSize:'1.3rem',fontWeight:800,color:'#222'}}>Your Cart</h2>
+        <button onClick={onClose} style={{background:'none',border:'none',fontSize:'1.7rem',cursor:'pointer',color:'#e91e63',fontWeight:700,lineHeight:1}}>×</button>
       </div>
-      <div className={styles.cartSidebarBody}>
+      <div style={{flex:1,overflowY:'auto',padding:'1.2rem 1.5rem 1.2rem 1.5rem'}}>
         {cartItems.length === 0 ? (
-          <div className={styles.emptyCart}>Your cart is empty.</div>
+          <div style={{color:'#888',fontSize:'1.1rem',textAlign:'center',marginTop:'3rem'}}>Your cart is empty.</div>
         ) : (
-          <ul className={styles.cartItemList}>
-            {cartItems.map(item => (
-              <li key={item.id} className={styles.cartItem}>
-                <div className={styles.cartItemImgWrap}>
-                  {item.image ? (
-                    <img src={item.image} alt={item.name} className={styles.cartItemImg} />
-                  ) : (
-                    <div className={styles.cartItemImgPlaceholder}>📦</div>
-                  )}
+          cartItems.map(item => (
+            <div key={item.id} style={{display:'flex',alignItems:'center',gap:'1rem',marginBottom:'1.5rem',background:'#fafafd',borderRadius:12,padding:'0.9rem 1.1rem',boxShadow:'0 2px 8px #0001',border:'1px solid #f2f2f2',position:'relative'}}>
+              <img src={item.image} alt={item.name} style={{width:64,height:64,borderRadius:10,objectFit:'cover',boxShadow:'0 2px 8px #0001',border:'1.5px solid #eee'}} />
+              <div style={{flex:1}}>
+                <div style={{fontWeight:700,color:'#222',fontSize:'1.08rem',marginBottom:'0.3rem'}}>{item.name}</div>
+                <div style={{fontWeight:700,color:'#e91e63',fontSize:'1.12rem',marginBottom:'0.2rem'}}>৳ {item.price}</div>
+                <div style={{display:'flex',alignItems:'center',gap:'0.5rem'}}>
+                  <button onClick={() => updateQuantity(item.id, item.quantity - 1)} style={{background:'#fff',border:'1.5px solid #e91e63',color:'#e91e63',borderRadius:6,width:28,height:28,fontWeight:700,fontSize:'1.1rem',cursor:'pointer',boxShadow:'0 1px 4px #e91e6322'}}>–</button>
+                  <span style={{fontWeight:700,fontSize:'1.08rem',color:'#222',minWidth:24,textAlign:'center'}}>{item.quantity}</span>
+                  <button onClick={() => updateQuantity(item.id, item.quantity + 1)} style={{background:'#fff',border:'1.5px solid #e91e63',color:'#e91e63',borderRadius:6,width:28,height:28,fontWeight:700,fontSize:'1.1rem',cursor:'pointer',boxShadow:'0 1px 4px #e91e6322'}}>+</button>
                 </div>
-                <div className={styles.cartItemInfo}>
-                  <div className={styles.cartItemName}>{item.name}</div>
-                  <div className={styles.cartItemPrice}>৳{item.price}</div>
-                  <div className={styles.cartItemQtyWrap}>
-                    <button onClick={() => updateQuantity(item.id, item.quantity - 1)}>-</button>
-                    <span>{item.quantity}</span>
-                    <button onClick={() => updateQuantity(item.id, item.quantity + 1)}>+</button>
-                  </div>
-                  <button className={styles.removeBtn} onClick={() => removeItem(item.id)}>Remove</button>
-                </div>
-              </li>
-            ))}
-          </ul>
+              </div>
+              <button onClick={() => removeItem(item.id)} style={{background:'none',border:'none',color:'#e91e63',fontWeight:700,fontSize:'1.3rem',cursor:'pointer',position:'absolute',top:10,right:10}}>×</button>
+            </div>
+          ))
         )}
       </div>
-      <div className={styles.cartSidebarFooter}>
-        <div className={styles.subtotal}>Subtotal: <b>৳{subtotal}</b></div>
-        <Link href="/cart" className={styles.checkoutBtn} onClick={onClose}>
-          Go to Cart
-        </Link>
+      <div style={{borderTop:'1px solid #eee',padding:'1.5rem',background:'#fff',boxShadow:'0 -2px 8px #0001',position:'sticky',bottom:0}}>
+        <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',fontWeight:800,fontSize:'1.18rem',marginBottom:'1.2rem'}}>
+          <span>Total</span>
+          <span style={{color:'#e91e63'}}>৳ {subtotal}</span>
+        </div>
+        <Link href="/cart" style={{width:'100%',display:'block',background:'#e91e63',color:'#fff',fontWeight:800,padding:'1rem 0',borderRadius:10,border:'none',fontSize:'1.18rem',cursor:'pointer',boxShadow:'0 2px 8px #e91e6322',textAlign:'center',transition:'all 0.2s',textDecoration:'none'}}>Checkout</Link>
       </div>
     </aside>
   );

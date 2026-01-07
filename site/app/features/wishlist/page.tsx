@@ -1,10 +1,11 @@
 
 "use client";
 import React, { useState, useEffect } from "react";
+import Header from "../components/Header";
 import Link from "next/link";
-import { wishlistStorage } from "../../src/utils/wishlistStorage";
-import { cartStorage } from "../../src/utils/cartStorage";
-import "../Wishlist/Wishlist.css";
+import { wishlistStorage } from "../../utils/wishlistStorage";
+import { cartStorage } from "../../utils/cartStorage";
+import "./Wishlist.css";
 
 const WishlistPage = ({ updateCartCount, updateWishlistCount }: { updateCartCount?: (count?: number) => void, updateWishlistCount?: () => void }) => {
   const [wishlistItems, setWishlistItems] = useState<any[]>([]);
@@ -18,7 +19,7 @@ const WishlistPage = ({ updateCartCount, updateWishlistCount }: { updateCartCoun
 
   const loadWishlist = () => {
     const items = wishlistStorage.getWishlist();
-    setWishlistItems(items);
+    setWishlistItems(Array.isArray(items.items) ? items.items : []);
   };
 
   const handleRemove = (productId: number) => {
@@ -72,24 +73,29 @@ const WishlistPage = ({ updateCartCount, updateWishlistCount }: { updateCartCoun
 
   if (wishlistItems.length === 0) {
     return (
-      <div className="wishlist-page">
-        <div className="container">
-          <h1>My Wishlist</h1>
-          <div className="empty-wishlist">
-            <div className="empty-icon">❤️</div>
-            <h2>Your wishlist is empty</h2>
-            <p>Add products you love to your wishlist</p>
-            <Link href="/shop" className="btn-primary">Continue Shopping</Link>
+      <>
+        <Header />
+        <div className="wishlist-page">
+          <div className="container">
+            <h1>My Wishlist</h1>
+            <div className="empty-wishlist">
+              <div className="empty-icon">❤️</div>
+              <h2>Your wishlist is empty</h2>
+              <p>Add products you love to your wishlist</p>
+              <Link href="/shop" className="btn-primary">Continue Shopping</Link>
+            </div>
           </div>
         </div>
-      </div>
+      </>
     );
   }
 
   return (
-    <div className="wishlist-page">
-      {showToast && <div className="toast-notification">{toastMessage}</div>}
-      <div className="container">
+    <>
+      <Header />
+      <div className="wishlist-page">
+        {showToast && <div className="toast-notification">{toastMessage}</div>}
+        <div className="container">
         <div className="wishlist-header">
           <h1>My Wishlist ({wishlistItems.length} items)</h1>
           <button className="btn-clear-wishlist" onClick={handleClearWishlist}>Clear Wishlist</button>
@@ -127,5 +133,4 @@ const WishlistPage = ({ updateCartCount, updateWishlistCount }: { updateCartCoun
     </div>
   );
 };
-
 export default WishlistPage;

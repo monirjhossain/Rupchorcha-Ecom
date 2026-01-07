@@ -2,11 +2,11 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import ProductCard from "../components/ProductCard";
-import { productsAPI, categoriesAPI, brandsAPI } from "../../src/services/api";
-import { cartStorage } from "../../src/utils/cartStorage";
+import ProductCard from "../../../components/ProductCard";
+import { productsAPI, categoriesAPI, brandsAPI } from "../../../../frontend/src/services/api";
+import { cartStorage } from "../../../utils/cartStorage";
 import Link from "next/link";
-import "../CategoryProducts/Shop.css";
+import "./Shop.css";
 
 const CategoryProductsPage = ({ params }: { params?: { slug?: string } }) => {
   // Next.js dynamic route: /CategoryProducts/[slug]
@@ -48,17 +48,32 @@ const CategoryProductsPage = ({ params }: { params?: { slug?: string } }) => {
         const now = Date.now();
         // Use cache if less than 5 minutes old
         if (cachedCategories && cacheTime && now - parseInt(cacheTime) < 300000) {
-          const categoriesData = JSON.parse(cachedCategories);
+          console.log('CACHED categories_cache:', cachedCategories);
+          console.log('CACHED brands_cache:', cachedBrands);
+          let categoriesData = [];
+          try {
+            categoriesData = cachedCategories ? JSON.parse(cachedCategories) : [];
+          } catch (e) {
+            categoriesData = [];
+          }
+          console.log('PARSED categoriesData:', categoriesData);
           setCategories(categoriesData);
           // Find current category from cache
           const foundCategory = categoriesData.find((cat: any) => cat.slug === slug || cat.id === parseInt(slug));
+          console.log('FOUND category:', foundCategory);
           if (foundCategory) {
             setCategory(foundCategory);
             setSelectedCategories([foundCategory.id]);
           }
           // Set cached brands if available
           if (cachedBrands) {
-            setBrands(JSON.parse(cachedBrands));
+            try {
+              const parsedBrands = JSON.parse(cachedBrands);
+              console.log('PARSED brands:', parsedBrands);
+              setBrands(parsedBrands);
+            } catch (e) {
+              setBrands([]);
+            }
           }
           setInitialLoading(false);
           return;
@@ -130,14 +145,13 @@ const CategoryProductsPage = ({ params }: { params?: { slug?: string } }) => {
         params.search = searchQuery;
       }
       const response = await productsAPI.getAll(currentPage, perPage, params);
-      const productsData = response.data?.data || response.data || response;
-      if (Array.isArray(productsData)) {
-        setProducts(productsData);
-      } else if (productsData.data && Array.isArray(productsData.data)) {
-        setProducts(productsData.data);
-        if (productsData.last_page) {
-          setTotalPages(productsData.last_page);
-        }
+      console.log('API products response:', response);
+      // Always map products from response.products.data (backend structure)
+      const productsData = response.products?.data || [];
+      setProducts(productsData);
+      // Set pagination if available
+      if (response.products?.last_page) {
+        setTotalPages(response.products.last_page);
       }
     } catch (error) {
       console.error("Error fetching products:", error);
@@ -318,7 +332,7 @@ const CategoryProductsPage = ({ params }: { params?: { slug?: string } }) => {
                     key={product.id}
                     product={product}
                     onAddToCart={handleAddToCart}
-                    addingToCart={!!addingToCart[product.id]}
+                    isAddingToCart={!!addingToCart[product.id]}
                   />
                 ))}
               </div>

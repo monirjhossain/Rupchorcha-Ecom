@@ -2,8 +2,9 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { cartStorage } from "@/src/utils/cartStorage";
-import styles from "./CartPage.module.css";
+import { cartStorage } from "../../utils/cartStorage";
+import styles from "./cartPage.module.css";
+import Header from "../components/Header";
 
 const shippingCosts = {
   outside: 130,
@@ -32,9 +33,7 @@ const CartPage: React.FC<{ updateCartCount?: () => void }> = ({ updateCartCount 
     try {
       setLoading(true);
       const cart = cartStorage.getCart();
-      if (cart.items && Array.isArray(cart.items)) {
-        setCartItems(cart.items);
-      }
+      setCartItems(cart.items);
     } catch (error) {
       console.error("Error fetching cart:", error);
     } finally {
@@ -97,17 +96,22 @@ const CartPage: React.FC<{ updateCartCount?: () => void }> = ({ updateCartCount 
 
   if (loading) {
     return (
-      <div className={styles.cartPage}>
-        <div className={styles.container}>
-          <div className={styles.loading}>Loading cart...</div>
+      <>
+        <Header />
+        <div className={styles.cartPage}>
+          <div className={styles.container}>
+            <div className={styles.loading}>Loading cart...</div>
+          </div>
         </div>
-      </div>
+      </>
     );
   }
 
   return (
-    <div className={styles.cartPage}>
-      <div className={styles.container}>
+    <>
+      <Header />
+      <div className={styles.cartPage}>
+        <div className={styles.container}>
         {/* Progress Steps */}
         <div className={styles.cartProgress}>
           <div className={`${styles.progressStep} ${styles.active}`}>
@@ -261,7 +265,15 @@ const CartPage: React.FC<{ updateCartCount?: () => void }> = ({ updateCartCount 
         </div>
       </div>
     </div>
+    </>
   );
-};
-
+}
 export default CartPage;
+
+
+
+
+
+
+
+

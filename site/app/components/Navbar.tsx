@@ -65,7 +65,7 @@ const Navbar: React.FC<NavbarProps> = ({ cartCount = 0, wishlistCount = 0, updat
         ) : (
           categories.map(cat => (
             <Link
-              href={`/category/${cat.name.toLowerCase().replace(/\s+/g, "-")}`}
+              href={`/category/${encodeURIComponent(cat.name.toLowerCase().replace(/\s+/g, "-"))}`}
               key={cat.id}
               className={styles.categoryLink}
               onClick={handleMobileLinkClick}
