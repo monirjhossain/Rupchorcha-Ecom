@@ -7,13 +7,12 @@ import Link from 'next/link';
 import React, { useState } from 'react';
 
 const categories = [
-  { id: 1, image: '/category-section/accessories.webp', alt: 'Accessories' },
-  { id: 2, image: '/category-section/bath-body.webp', alt: 'Bath & Body' },
-  { id: 3, image: '/category-section/hair-care.webp', alt: 'Hair Care' },
-  { id: 4, image: '/category-section/makeup.webp', alt: 'Makeup' },
-  { id: 5, image: '/category-section/mom-baby-care.webp', alt: 'Mom & Baby Care' },
-  { id: 6, image: '/category-section/skincare.webp', alt: 'Skincare' },
-
+  { id: 1, image: '/category-section/accessories.webp', alt: 'Accessories', slug: 'accessories' },
+  { id: 2, image: '/category-section/bath-body.webp', alt: 'Bath & Body', slug: 'bath-body' },
+  { id: 3, image: '/category-section/hair-care.webp', alt: 'Hair Care', slug: 'hair-care' },
+  { id: 4, image: '/category-section/makeup.webp', alt: 'Makeup', slug: 'makeup' },
+  { id: 5, image: '/category-section/mom-baby-care.webp', alt: 'Mom & Baby Care', slug: 'mom-baby-care' },
+  { id: 6, image: '/category-section/skincare.webp', alt: 'Skincare', slug: 'skin-care' },
 ];
 
 const ShopByCategorySection = () => {
@@ -50,8 +49,8 @@ const ShopByCategorySection = () => {
         {visibleCategories.map(cat => (
           <Link
             key={cat.id}
-            href={`/category/${cat.alt.toLowerCase().replace(/\s+/g, '-')}`}
-            style={{textDecoration:'none'}}>
+            href={`/category/${cat.slug}`}
+            style={{textDecoration:'none', color: 'inherit'}}>
             <div style={{display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center'}}>
               <div style={{width:150,height:150,display:'flex',alignItems:'center',justifyContent:'center',background:'#fff',borderRadius:'50%',boxShadow:'0 1px 4px #0001',border:'5px solid #f7c6e0',overflow:'hidden',transition:'box-shadow 0.2s',cursor:'pointer'}}>
                 <Image src={cat.image} alt={cat.alt} width={140} height={140} style={{objectFit:'cover',borderRadius:'50%'}} />

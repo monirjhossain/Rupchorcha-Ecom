@@ -11,7 +11,15 @@ class ProductController extends Controller
     // List all products
     public function index(Request $request)
     {
-        $products = Product::paginate(20);
+        $query = Product::query();
+
+        // Filter by category if provided
+        if ($request->has('categories')) {
+            $categoryIds = explode(',', $request->categories);
+            $query->whereIn('category_id', $categoryIds);
+        }
+
+        $products = $query->paginate(20);
         return response()->json(['success' => true, 'products' => $products]);
     }
 

@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useRef, useEffect } from "react";
-import { categoriesAPI, brandsAPI } from "../../../frontend/src/services/api";
+import { categoriesAPI, brandsAPI } from "../services/api";
 
 // Remove all mockCategories and mockBrands. Only use backend data for categories and brands.
 

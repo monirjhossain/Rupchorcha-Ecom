@@ -1,11 +1,11 @@
 "use client";
 import React from "react";
 import { useParams } from "next/navigation";
-import Sidebar from "../../components/Sidebar";
-import Header from "../../components/Header";
-// Removed unused imports after mock data removal
 
-// Remove all mock data. Use only backend data. (Implementation for fetching real data should be added here if not already.)
+import dynamic from "next/dynamic";
+const Header = dynamic(() => import("../../components/Header"), { ssr: false });
+const Sidebar = dynamic(() => import("../../components/Sidebar"), { ssr: false });
+const CategoryProductsPage = dynamic(() => import("../../features/category/categoryProducts/page"), { ssr: false });
 
 const CategoryPage = () => {
   const params = useParams();
@@ -20,8 +20,8 @@ const CategoryPage = () => {
         <div style={{flex:1}}>
           {/* Category Title */}
           <div style={{fontSize:'1.7rem',fontWeight:'bold',color:'#222',marginBottom:'0.5rem',marginTop:'0.5rem',textAlign:'center'}}>{displayName} Products</div>
-          {/* Category Icons Row removed (was mock data) */}
-          {/* Product Grid removed (was mock data). Use backend data grid here. */}
+          {/* Product Grid: Use backend data */}
+          <CategoryProductsPage params={{ slug: category }} />
         </div>
       </div>
     </>

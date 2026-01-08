@@ -22,9 +22,11 @@ class BrandController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required',
-            'slug' => 'required|unique:brands',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
         ]);
+
+        // Generate slug from name
+        $validated['slug'] = \Illuminate\Support\Str::slug($validated['name']);
 
         if ($request->hasFile('image')) {
             $validated['image'] = $request->file('image')->store('brands', 'public');

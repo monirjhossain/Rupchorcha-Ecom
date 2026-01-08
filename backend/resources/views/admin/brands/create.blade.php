@@ -38,7 +38,7 @@
 </div>
 @endsection
 
-@section('scripts')
+@push('scripts')
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         const nameInput = document.querySelector('input[name="name"]');
@@ -54,4 +54,4 @@
         }
     });
 </script>
-@endsection
+@endpush
